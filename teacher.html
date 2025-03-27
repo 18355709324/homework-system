@@ -130,6 +130,38 @@
         .withdraw-button:hover {
             background: #f57c00;
         }
+        .student-card {
+            position: relative;
+        }
+        .action-buttons {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: none;
+            gap: 10px;
+        }
+        .student-card:hover .action-buttons {
+            display: flex;
+        }
+        .action-button {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            color: white;
+            transition: all 0.3s ease;
+        }
+        .revision-button {
+            background: #ff9800;
+        }
+        .complete-button {
+            background: #4caf50;
+        }
+        .action-button:hover {
+            transform: scale(1.05);
+        }
     </style>
 </head>
 <body>
@@ -178,7 +210,11 @@
 
         // 示例学生名单
         const students = [
-            "张三", "李四", "王五", "赵六", "钱七", "孙八", "周九", "吴十"
+            "张子茜", "黄忠远", "黄忠致", "陈宇泽", "吴浩然", "宋景初", "汪子睦", "马一铭",
+            "韩来希", "黎喆", "高文杰", "毕然", "颜铭轩", "张艺鑫", "赖一鸣", "庄优泽",
+            "刘亦鑫", "吴迪", "曹峻闻", "鲁宇航", "熊思文", "吴锦轩", "王浩然", "张祖榕",
+            "汪雅妍", "赵雨琪", "孙叮悦", "王汐彦", "朱梓涵", "陈钰涵", "韩依诺", "胡紫棋",
+            "夏奕焰", "来乐", "孙知非", "吴欣悦", "黄子芮", "李佳润", "王好之"
         ];
 
         // 学生状态
@@ -275,28 +311,50 @@
                 card.appendChild(timeSpan);
             }
 
-            // 添加撤回按钮（仅对已提交状态显示）
+            // 添加操作按钮
             if (studentData.status === 'submitted') {
-                const withdrawButton = document.createElement('button');
-                withdrawButton.className = 'withdraw-button';
-                withdrawButton.textContent = '撤回提交';
-                withdrawButton.onclick = (e) => {
-                    e.stopPropagation();
-                    if (confirm('确定要撤回提交吗？')) {
-                        studentStatus[student] = {
-                            status: 'unsubmitted',
-                            timestamp: null,
-                            feedback: []
-                        };
-                        saveData();
-                    }
-                };
-                card.appendChild(withdrawButton);
-            }
+                const actionButtons = document.createElement('div');
+                actionButtons.className = 'action-buttons';
 
-            // 添加点击事件（教师批改）
-            if (studentData.status === 'submitted' || studentData.status === 'needs-revision') {
-                card.addEventListener('click', () => handleStudentClick(student));
+                const revisionButton = document.createElement('button');
+                revisionButton.className = 'action-button revision-button';
+                revisionButton.textContent = '需订正';
+                revisionButton.onclick = (e) => {
+                    e.stopPropagation();
+                    studentStatus[student].status = 'needs-revision';
+                    addFeedback(student, '作业需要订正');
+                    saveData();
+                };
+
+                const completeButton = document.createElement('button');
+                completeButton.className = 'action-button complete-button';
+                completeButton.textContent = '已完成';
+                completeButton.onclick = (e) => {
+                    e.stopPropagation();
+                    studentStatus[student].status = 'completed';
+                    addFeedback(student, '作业已完成，做得很好！');
+                    saveData();
+                };
+
+                actionButtons.appendChild(revisionButton);
+                actionButtons.appendChild(completeButton);
+                card.appendChild(actionButtons);
+            } else if (studentData.status === 'needs-revision') {
+                const actionButtons = document.createElement('div');
+                actionButtons.className = 'action-buttons';
+
+                const completeButton = document.createElement('button');
+                completeButton.className = 'action-button complete-button';
+                completeButton.textContent = '已完成';
+                completeButton.onclick = (e) => {
+                    e.stopPropagation();
+                    studentStatus[student].status = 'completed';
+                    addFeedback(student, '订正完成，做得很好！');
+                    saveData();
+                };
+
+                actionButtons.appendChild(completeButton);
+                card.appendChild(actionButtons);
             }
             
             return card;
@@ -323,28 +381,6 @@
                     }
                 });
             }
-        }
-
-        // 处理学生点击事件（教师批改）
-        function handleStudentClick(student) {
-            const currentStatus = studentStatus[student].status;
-            
-            if (currentStatus === 'submitted') {
-                if (confirm('是否将作业标记为需订正？')) {
-                    studentStatus[student].status = 'needs-revision';
-                    addFeedback(student, '作业需要订正');
-                } else if (confirm('是否将作业标记为已完成？')) {
-                    studentStatus[student].status = 'completed';
-                    addFeedback(student, '作业已完成，做得很好！');
-                }
-            } else if (currentStatus === 'needs-revision') {
-                if (confirm('是否将作业标记为已完成？')) {
-                    studentStatus[student].status = 'completed';
-                    addFeedback(student, '订正完成，做得很好！');
-                }
-            }
-            
-            saveData();
         }
 
         // 添加反馈信息
