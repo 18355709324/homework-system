@@ -322,8 +322,11 @@
                 revisionButton.onclick = (e) => {
                     e.stopPropagation();
                     studentStatus[student].status = 'needs-revision';
+                    studentStatus[student].timestamp = new Date().toISOString();
                     addFeedback(student, '作业需要订正');
-                    saveData();
+                    saveData().then(() => {
+                        updateLists();
+                    });
                 };
 
                 const completeButton = document.createElement('button');
@@ -332,8 +335,11 @@
                 completeButton.onclick = (e) => {
                     e.stopPropagation();
                     studentStatus[student].status = 'completed';
+                    studentStatus[student].timestamp = new Date().toISOString();
                     addFeedback(student, '作业已完成，做得很好！');
-                    saveData();
+                    saveData().then(() => {
+                        updateLists();
+                    });
                 };
 
                 actionButtons.appendChild(revisionButton);
@@ -349,8 +355,11 @@
                 completeButton.onclick = (e) => {
                     e.stopPropagation();
                     studentStatus[student].status = 'completed';
+                    studentStatus[student].timestamp = new Date().toISOString();
                     addFeedback(student, '订正完成，做得很好！');
-                    saveData();
+                    saveData().then(() => {
+                        updateLists();
+                    });
                 };
 
                 actionButtons.appendChild(completeButton);
@@ -419,6 +428,15 @@
                     alert("保存数据失败，请检查网络连接");
                 });
         }
+
+        // 监听实时数据更新
+        database.ref('studentStatus').on('value', (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                studentStatus = data;
+                updateLists();
+            }
+        });
     </script>
 </body>
 </html> 
