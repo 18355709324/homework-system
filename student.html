@@ -114,36 +114,53 @@
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
 
-        // 添加连接状态检查
-        const connectedRef = database.ref(".info/connected");
-        connectedRef.on("value", (snap) => {
-            if (snap.val() === true) {
-                console.log("已连接到 Firebase");
-                alert("已成功连接到 Firebase 数据库！");
-            } else {
-                console.log("未连接到 Firebase");
-                alert("未能连接到 Firebase 数据库，请检查网络连接！");
-            }
-        });
-
         // 示例学生名单
         const students = [
             "张三", "李四", "王五", "赵六", "钱七", "孙八", "周九", "吴十"
         ];
 
         // 初始化学生状态
-        const studentStatus = {};
-        
-        // 初始化所有学生的状态
-        students.forEach(student => {
-            if (!studentStatus[student]) {
-                studentStatus[student] = {
-                    status: 'unsubmitted',
-                    timestamp: null,
-                    feedback: []
-                };
+        let studentStatus = {};
+
+        // 添加连接状态检查
+        const connectedRef = database.ref(".info/connected");
+        connectedRef.on("value", (snap) => {
+            if (snap.val() === true) {
+                console.log("已连接到 Firebase");
+                // 连接成功后初始化数据
+                initializeData();
+            } else {
+                console.log("未连接到 Firebase");
+                alert("未能连接到 Firebase 数据库，请检查网络连接！");
             }
         });
+
+        // 初始化数据
+        function initializeData() {
+            database.ref('studentStatus').once('value')
+                .then((snapshot) => {
+                    const data = snapshot.val();
+                    if (data) {
+                        studentStatus = data;
+                    } else {
+                        // 如果没有数据，初始化所有学生状态
+                        students.forEach(student => {
+                            studentStatus[student] = {
+                                status: 'unsubmitted',
+                                timestamp: null,
+                                feedback: []
+                            };
+                        });
+                        // 保存初始化的数据
+                        saveData();
+                    }
+                    updateStudentView();
+                })
+                .catch((error) => {
+                    console.error("Error loading data:", error);
+                    alert("加载数据失败，请刷新页面重试");
+                });
+        }
 
         // 获取状态文本
         function getStatusText(status) {
@@ -209,16 +226,6 @@
                 updateStudentView();
             }
         });
-
-        // 初始化加载数据
-        database.ref('studentStatus').once('value')
-            .then((snapshot) => {
-                const data = snapshot.val();
-                if (data) {
-                    studentStatus = data;
-                    updateStudentView();
-                }
-            });
     </script>
 </body>
 </html> 
