@@ -4,9 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>作业提交系统 - 教师端</title>
-    <!-- 更新 Firebase SDK -->
+    <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <style>
         body {
             font-family: 'Microsoft YaHei', sans-serif;
@@ -162,33 +163,222 @@
         .action-button:hover {
             transform: scale(1.05);
         }
+        /* 登录表单样式 */
+        .login-container {
+            max-width: 400px;
+            margin: 100px auto;
+            padding: 20px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .login-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .login-form input {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+        }
+        .login-form button {
+            padding: 12px;
+            background: #1a237e;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .login-form button:hover {
+            background: #0d1657;
+        }
+        .register-button {
+            background: #4caf50 !important;
+        }
+        .register-button:hover {
+            background: #388e3c !important;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        .form-group label {
+            font-size: 14px;
+            color: #666;
+        }
+        .switch-form {
+            text-align: center;
+            margin-top: 15px;
+            color: #666;
+        }
+        .switch-form a {
+            color: #1a237e;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .switch-form a:hover {
+            text-decoration: underline;
+        }
+        /* 学生管理面板样式 */
+        .student-management {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .student-management h2 {
+            color: #1a237e;
+            margin-bottom: 15px;
+        }
+        .student-form {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .student-form input {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .student-form button {
+            padding: 8px 16px;
+            background: #4caf50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .student-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 10px;
+        }
+        .student-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px;
+            background: #f5f5f5;
+            border-radius: 4px;
+        }
+        .student-item button {
+            padding: 4px 8px;
+            background: #f44336;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .logout-button {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 8px 16px;
+            background: #f44336;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        #app-container {
+            display: none;
+        }
+        #login-container {
+            display: none;
+        }
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>作业提交系统 - 教师端</h1>
+    <!-- 登录界面 -->
+    <div id="login-container" class="login-container">
+        <h2 class="section-title">教师登录</h2>
+        <form id="login-form" class="login-form">
+            <div class="form-group">
+                <label for="login-email">邮箱地址</label>
+                <input type="email" id="login-email" placeholder="请输入邮箱" required>
+            </div>
+            <div class="form-group">
+                <label for="login-password">密码</label>
+                <input type="password" id="login-password" placeholder="请输入密码" required>
+            </div>
+            <button type="submit">登录</button>
+        </form>
+        <div class="switch-form">
+            还没有账号？<a onclick="showRegisterForm()">立即注册</a>
+        </div>
     </div>
 
-    <div class="teacher-controls">
-        <button class="reset-button" onclick="resetAllStatus()">重置所有状态</button>
+    <!-- 注册界面 -->
+    <div id="register-container" class="login-container" style="display: none;">
+        <h2 class="section-title">教师注册</h2>
+        <form id="register-form" class="login-form">
+            <div class="form-group">
+                <label for="register-name">姓名</label>
+                <input type="text" id="register-name" placeholder="请输入您的姓名" required>
+            </div>
+            <div class="form-group">
+                <label for="register-email">邮箱地址</label>
+                <input type="email" id="register-email" placeholder="请输入邮箱" required>
+            </div>
+            <div class="form-group">
+                <label for="register-password">密码</label>
+                <input type="password" id="register-password" placeholder="请设置密码（至少6位）" required minlength="6">
+            </div>
+            <div class="form-group">
+                <label for="register-password-confirm">确认密码</label>
+                <input type="password" id="register-password-confirm" placeholder="请再次输入密码" required minlength="6">
+            </div>
+            <button type="submit" class="register-button">注册</button>
+        </form>
+        <div class="switch-form">
+            已有账号？<a onclick="showLoginForm()">立即登录</a>
+        </div>
     </div>
 
-    <div class="container">
-        <div class="section">
-            <h2 class="section-title">未提交作业</h2>
-            <div id="unsubmitted-list"></div>
+    <!-- 主应用界面 -->
+    <div id="app-container">
+        <button class="logout-button" onclick="logout()">退出登录</button>
+        <div class="header">
+            <h1>作业提交系统 - 教师端</h1>
         </div>
-        <div class="section">
-            <h2 class="section-title">已提交作业</h2>
-            <div id="submitted-list"></div>
+
+        <!-- 学生管理面板 -->
+        <div class="student-management">
+            <h2>学生管理</h2>
+            <div class="student-form">
+                <input type="text" id="new-student-name" placeholder="输入学生姓名">
+                <button onclick="addStudent()">添加学生</button>
+            </div>
+            <div id="student-list" class="student-list"></div>
         </div>
-        <div class="section">
-            <h2 class="section-title">需订正</h2>
-            <div id="revision-list"></div>
+
+        <div class="teacher-controls">
+            <button class="reset-button" onclick="resetAllStatus()">重置所有状态</button>
         </div>
-        <div class="section">
-            <h2 class="section-title">已完成</h2>
-            <div id="completed-list"></div>
+
+        <div class="container">
+            <div class="section">
+                <h2 class="section-title">未提交作业</h2>
+                <div id="unsubmitted-list"></div>
+            </div>
+            <div class="section">
+                <h2 class="section-title">已提交作业</h2>
+                <div id="submitted-list"></div>
+            </div>
+            <div class="section">
+                <h2 class="section-title">需订正</h2>
+                <div id="revision-list"></div>
+            </div>
+            <div class="section">
+                <h2 class="section-title">已完成</h2>
+                <div id="completed-list"></div>
+            </div>
         </div>
     </div>
 
@@ -207,56 +397,224 @@
         // 初始化 Firebase
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
+        const auth = firebase.auth();
 
-        // 示例学生名单
-        const students = [
-            "张子茜", "黄忠远", "黄忠致", "陈宇泽", "吴浩然", "宋景初", "汪子睦", "马一铭",
-            "韩来希", "黎喆", "高文杰", "毕然", "颜铭轩", "张艺鑫", "赖一鸣", "庄优泽",
-            "刘亦鑫", "吴迪", "曹峻闻", "鲁宇航", "熊思文", "吴锦轩", "王浩然", "张祖榕",
-            "汪雅妍", "赵雨琪", "孙叮悦", "王汐彦", "朱梓涵", "陈钰涵", "韩依诺", "胡紫棋",
-            "夏奕焰", "来乐", "孙知非", "吴欣悦", "黄子芮", "李佳润", "王好之"
-        ];
-
-        // 学生状态
+        let currentTeacherId = null;
+        let students = [];
         let studentStatus = {};
 
-        // 添加连接状态检查
-        const connectedRef = database.ref(".info/connected");
-        connectedRef.on("value", (snap) => {
-            if (snap.val() === true) {
-                console.log("已连接到 Firebase");
-                // 连接成功后初始化数据
-                initializeData();
+        // 切换到注册表单
+        function showRegisterForm() {
+            document.getElementById('login-container').style.display = 'none';
+            document.getElementById('register-container').style.display = 'block';
+        }
+
+        // 切换到登录表单
+        function showLoginForm() {
+            document.getElementById('register-container').style.display = 'none';
+            document.getElementById('login-container').style.display = 'block';
+        }
+
+        // 登录表单处理
+        document.getElementById('login-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            
+            auth.signInWithEmailAndPassword(email, password)
+                .catch((error) => {
+                    if (error.code === 'auth/user-not-found') {
+                        alert('该邮箱未注册');
+                    } else if (error.code === 'auth/wrong-password') {
+                        alert('密码错误');
+                    } else {
+                        alert('登录失败：' + error.message);
+                    }
+                });
+        });
+
+        // 注册表单处理
+        document.getElementById('register-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const name = document.getElementById('register-name').value;
+            const email = document.getElementById('register-email').value;
+            const password = document.getElementById('register-password').value;
+            const passwordConfirm = document.getElementById('register-password-confirm').value;
+
+            if (password !== passwordConfirm) {
+                alert('两次输入的密码不一致');
+                return;
+            }
+
+            auth.createUserWithEmailAndPassword(email, password)
+                .then((userCredential) => {
+                    const user = userCredential.user;
+                    // 更新用户信息
+                    return Promise.all([
+                        user.updateProfile({
+                            displayName: name
+                        }),
+                        // 保存教师信息到数据库
+                        database.ref(`teachers/${user.uid}/profile`).set({
+                            displayName: name,
+                            email: email,
+                            createdAt: new Date().toISOString()
+                        })
+                    ]);
+                })
+                .then(() => {
+                    alert('注册成功！');
+                    showLoginForm(); // 注册成功后显示登录表单
+                })
+                .catch((error) => {
+                    if (error.code === 'auth/email-already-in-use') {
+                        alert('该邮箱已被注册');
+                    } else if (error.code === 'auth/weak-password') {
+                        alert('密码强度太弱，请设置至少6位密码');
+                    } else {
+                        alert('注册失败：' + error.message);
+                    }
+                });
+        });
+
+        // 监听认证状态
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                currentTeacherId = user.uid;
+                // 确保教师信息存在
+                database.ref(`teachers/${user.uid}/profile`).once('value')
+                    .then((snapshot) => {
+                        if (!snapshot.exists()) {
+                            // 如果教师信息不存在，创建它
+                            return database.ref(`teachers/${user.uid}/profile`).set({
+                                displayName: user.displayName || '未命名教师',
+                                email: user.email,
+                                createdAt: new Date().toISOString()
+                            });
+                        }
+                    })
+                    .then(() => {
+                        document.getElementById('login-container').style.display = 'none';
+                        document.getElementById('register-container').style.display = 'none';
+                        document.getElementById('app-container').style.display = 'block';
+                        loadTeacherData();
+                    });
             } else {
-                console.log("未连接到 Firebase");
-                alert("未能连接到 Firebase 数据库，请检查网络连接！");
+                currentTeacherId = null;
+                document.getElementById('login-container').style.display = 'block';
+                document.getElementById('register-container').style.display = 'none';
+                document.getElementById('app-container').style.display = 'none';
             }
         });
 
-        // 初始化数据
-        function initializeData() {
-            database.ref('studentStatus').once('value')
-                .then((snapshot) => {
-                    const data = snapshot.val();
-                    if (data) {
-                        studentStatus = data;
-                    } else {
-                        // 如果没有数据，初始化所有学生状态
-                        students.forEach(student => {
-                            studentStatus[student] = {
-                                status: 'unsubmitted',
-                                timestamp: null,
-                                feedback: []
-                            };
-                        });
-                        // 保存初始化的数据
+        // 退出登录
+        function logout() {
+            auth.signOut();
+        }
+
+        // 加载教师数据
+        function loadTeacherData() {
+            database.ref(`teachers/${currentTeacherId}/students`).on('value', (snapshot) => {
+                const data = snapshot.val() || [];
+                students = Array.isArray(data) ? data : Object.values(data);
+                updateStudentList();
+                loadStudentStatus();
+            });
+        }
+
+        // 添加学生
+        function addStudent() {
+            const input = document.getElementById('new-student-name');
+            const name = input.value.trim();
+            
+            if (name && !students.includes(name)) {
+                students.push(name);
+                database.ref(`teachers/${currentTeacherId}/students`).set(students)
+                    .then(() => {
+                        input.value = '';
+                        // 为新学生初始化状态
+                        studentStatus[name] = {
+                            status: 'unsubmitted',
+                            timestamp: null,
+                            feedback: []
+                        };
                         saveData();
-                    }
+                    })
+                    .catch(error => {
+                        alert('添加学生失败：' + error.message);
+                    });
+            } else {
+                alert('请输入有效的学生姓名，且不能重复');
+            }
+        }
+
+        // 删除学生
+        function removeStudent(name) {
+            if (confirm(`确定要删除学生"${name}"吗？`)) {
+                students = students.filter(s => s !== name);
+                delete studentStatus[name];
+                
+                Promise.all([
+                    database.ref(`teachers/${currentTeacherId}/students`).set(students),
+                    database.ref(`teachers/${currentTeacherId}/studentStatus/${name}`).remove()
+                ]).then(() => {
+                    updateStudentList();
                     updateLists();
+                }).catch(error => {
+                    alert('删除学生失败：' + error.message);
+                });
+            }
+        }
+
+        // 更新学生列表显示
+        function updateStudentList() {
+            const list = document.getElementById('student-list');
+            list.innerHTML = '';
+            
+            students.forEach(name => {
+                const item = document.createElement('div');
+                item.className = 'student-item';
+                
+                const nameSpan = document.createElement('span');
+                nameSpan.textContent = name;
+                
+                const deleteButton = document.createElement('button');
+                deleteButton.textContent = '删除';
+                deleteButton.onclick = () => removeStudent(name);
+                
+                item.appendChild(nameSpan);
+                item.appendChild(deleteButton);
+                list.appendChild(item);
+            });
+        }
+
+        // 加载学生状态
+        function loadStudentStatus() {
+            database.ref(`teachers/${currentTeacherId}/studentStatus`).on('value', (snapshot) => {
+                studentStatus = snapshot.val() || {};
+                // 确保所有学生都有状态
+                students.forEach(student => {
+                    if (!studentStatus[student]) {
+                        studentStatus[student] = {
+                            status: 'unsubmitted',
+                            timestamp: null,
+                            feedback: []
+                        };
+                    }
+                });
+                updateLists();
+            });
+        }
+
+        // 保存数据到 Firebase
+        function saveData() {
+            return database.ref(`teachers/${currentTeacherId}/studentStatus`).set(studentStatus)
+                .then(() => {
+                    console.log('数据保存成功');
                 })
                 .catch((error) => {
-                    console.error("Error loading data:", error);
-                    alert("加载数据失败，请刷新页面重试");
+                    console.error("Error saving data:", error);
+                    alert("保存数据失败，请检查网络连接");
                 });
         }
 
@@ -416,27 +774,6 @@
                 saveData();
             }
         }
-
-        // 保存数据到 Firebase
-        function saveData() {
-            return database.ref('studentStatus').set(studentStatus)
-                .then(() => {
-                    console.log('数据保存成功');
-                })
-                .catch((error) => {
-                    console.error("Error saving data:", error);
-                    alert("保存数据失败，请检查网络连接");
-                });
-        }
-
-        // 监听实时数据更新
-        database.ref('studentStatus').on('value', (snapshot) => {
-            const data = snapshot.val();
-            if (data) {
-                studentStatus = data;
-                updateLists();
-            }
-        });
     </script>
 </body>
 </html> 
