@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>作业提交系统 - 教师端</title>
+    <!-- 更新 Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+    <style>
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f0f2f5;
+            color: #333;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .header h1 {
+            font-size: 28px;
+            color: #1a237e;
+            margin: 0;
+        }
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .section {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .student-card {
+            background: #fff;
+            border: 1px solid #e0e0e0;
+            padding: 15px;
+            margin: 8px 0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .student-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .submitted {
+            background: #e8f5e9;
+            border-color: #4caf50;
+        }
+        .needs-revision {
+            background: #fff3e0;
+            border-color: #ff9800;
+        }
+        .completed {
+            background: #e3f2fd;
+            border-color: #2196f3;
+        }
+        .section-title {
+            font-size: 20px;
+            color: #1a237e;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e3f2fd;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 16px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        .status-submitted {
+            background: #4caf50;
+            color: white;
+        }
+        .status-needs-revision {
+            background: #ff9800;
+            color: white;
+        }
+        .status-completed {
+            background: #2196f3;
+            color: white;
+        }
+        .time-stamp {
+            font-size: 12px;
+            color: #666;
+            margin-left: 8px;
+        }
+        .teacher-controls {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .reset-button {
+            background: #f44336;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background 0.3s ease;
+        }
+        .reset-button:hover {
+            background: #da190b;
+        }
+        .withdraw-button {
+            background: #ff9800;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s ease;
+            margin-left: 10px;
+        }
+        .withdraw-button:hover {
+            background: #f57c00;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>作业提交系统 - 教师端</h1>
+    </div>
+
+    <div class="teacher-controls">
+        <button class="reset-button" onclick="resetAllStatus()">重置所有状态</button>
+    </div>
+
+    <div class="container">
+        <div class="section">
+            <h2 class="section-title">未提交作业</h2>
+            <div id="unsubmitted-list"></div>
+        </div>
+        <div class="section">
+            <h2 class="section-title">已提交作业</h2>
+            <div id="submitted-list"></div>
+        </div>
+        <div class="section">
+            <h2 class="section-title">需订正</h2>
+            <div id="revision-list"></div>
+        </div>
+        <div class="section">
+            <h2 class="section-title">已完成</h2>
+            <div id="completed-list"></div>
+        </div>
+    </div>
+
+    <script>
+        // Firebase 配置
+        const firebaseConfig = {
+            apiKey: "AIzaSyC5HLn5Hs_3Fz4UwXJ_UABCwewXqcPWuVE",
+            authDomain: "homework-system-demo.firebaseapp.com",
+            databaseURL: "https://homework-system-demo-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "homework-system-demo",
+            storageBucket: "homework-system-demo.appspot.com",
+            messagingSenderId: "339877271892",
+            appId: "1:339877271892:web:b0a24e27c13e6a89a9b6c4"
+        };
+
+        // 初始化 Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        // 添加连接状态检查
+        const connectedRef = database.ref(".info/connected");
+        connectedRef.on("value", (snap) => {
+            if (snap.val() === true) {
+                console.log("已连接到 Firebase");
+                alert("已成功连接到 Firebase 数据库！");
+            } else {
+                console.log("未连接到 Firebase");
+                alert("未能连接到 Firebase 数据库，请检查网络连接！");
+            }
+        });
+
+        // 示例学生名单
+        const students = [
+            "张三", "李四", "王五", "赵六", "钱七", "孙八", "周九", "吴十"
+        ];
+
+        // 学生状态
+        let studentStatus = {};
+
+        // 获取状态文本
+        function getStatusText(status) {
+            const statusMap = {
+                'unsubmitted': '未提交',
+                'submitted': '已提交',
+                'needs-revision': '需订正',
+                'completed': '已完成'
+            };
+            return statusMap[status] || status;
+        }
+
+        // 格式化时间
+        function formatTime(timestamp) {
+            if (!timestamp) return '';
+            const date = new Date(timestamp);
+            return `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+        }
+
+        // 创建学生卡片
+        function createStudentCard(student) {
+            const card = document.createElement('div');
+            const studentData = studentStatus[student] || { status: 'unsubmitted', timestamp: null, feedback: [] };
+            card.className = `student-card ${studentData.status}`;
+            
+            const leftDiv = document.createElement('div');
+            leftDiv.style.display = 'flex';
+            leftDiv.style.alignItems = 'center';
+            leftDiv.style.gap = '10px';
+            
+            // 添加学生姓名
+            const nameSpan = document.createElement('span');
+            nameSpan.textContent = student;
+            nameSpan.style.fontWeight = '500';
+            leftDiv.appendChild(nameSpan);
+            
+            // 添加状态标签
+            const statusBadge = document.createElement('span');
+            statusBadge.className = `status-badge status-${studentData.status}`;
+            statusBadge.textContent = getStatusText(studentData.status);
+            leftDiv.appendChild(statusBadge);
+            
+            card.appendChild(leftDiv);
+
+            // 添加时间显示
+            if (studentData.timestamp) {
+                const timeSpan = document.createElement('span');
+                timeSpan.className = 'time-stamp';
+                timeSpan.textContent = formatTime(studentData.timestamp);
+                card.appendChild(timeSpan);
+            }
+
+            // 添加撤回按钮（仅对已提交状态显示）
+            if (studentData.status === 'submitted') {
+                const withdrawButton = document.createElement('button');
+                withdrawButton.className = 'withdraw-button';
+                withdrawButton.textContent = '撤回提交';
+                withdrawButton.onclick = (e) => {
+                    e.stopPropagation();
+                    if (confirm('确定要撤回提交吗？')) {
+                        studentStatus[student] = {
+                            status: 'unsubmitted',
+                            timestamp: null,
+                            feedback: []
+                        };
+                        saveData();
+                    }
+                };
+                card.appendChild(withdrawButton);
+            }
+
+            // 添加点击事件（教师批改）
+            if (studentData.status === 'submitted' || studentData.status === 'needs-revision') {
+                card.addEventListener('click', () => handleStudentClick(student));
+            }
+            
+            return card;
+        }
+
+        // 更新所有列表
+        function updateLists() {
+            const lists = {
+                'unsubmitted-list': 'unsubmitted',
+                'submitted-list': 'submitted',
+                'revision-list': 'needs-revision',
+                'completed-list': 'completed'
+            };
+
+            for (const [listId, status] of Object.entries(lists)) {
+                const list = document.getElementById(listId);
+                list.innerHTML = '';
+                
+                students.forEach(student => {
+                    const studentData = studentStatus[student] || { status: 'unsubmitted' };
+                    if (studentData.status === status) {
+                        const card = createStudentCard(student);
+                        list.appendChild(card);
+                    }
+                });
+            }
+        }
+
+        // 处理学生点击事件（教师批改）
+        function handleStudentClick(student) {
+            const currentStatus = studentStatus[student].status;
+            
+            if (currentStatus === 'submitted') {
+                if (confirm('是否将作业标记为需订正？')) {
+                    studentStatus[student].status = 'needs-revision';
+                    addFeedback(student, '作业需要订正');
+                } else if (confirm('是否将作业标记为已完成？')) {
+                    studentStatus[student].status = 'completed';
+                    addFeedback(student, '作业已完成，做得很好！');
+                }
+            } else if (currentStatus === 'needs-revision') {
+                if (confirm('是否将作业标记为已完成？')) {
+                    studentStatus[student].status = 'completed';
+                    addFeedback(student, '订正完成，做得很好！');
+                }
+            }
+            
+            saveData();
+        }
+
+        // 添加反馈信息
+        function addFeedback(student, text) {
+            if (!studentStatus[student].feedback) {
+                studentStatus[student].feedback = [];
+            }
+            studentStatus[student].feedback.push({
+                text: text,
+                timestamp: new Date().toISOString()
+            });
+        }
+
+        // 重置所有状态
+        function resetAllStatus() {
+            if (confirm('确定要重置所有学生的作业状态吗？此操作不可撤销。')) {
+                students.forEach(student => {
+                    studentStatus[student] = {
+                        status: 'unsubmitted',
+                        timestamp: null,
+                        feedback: []
+                    };
+                });
+                saveData();
+            }
+        }
+
+        // 保存数据到 Firebase
+        function saveData() {
+            return database.ref('studentStatus').set(studentStatus)
+                .then(() => {
+                    console.log('数据保存成功');
+                })
+                .catch((error) => {
+                    console.error("Error saving data:", error);
+                    alert("保存数据失败，请检查网络连接");
+                });
+        }
+
+        // 监听实时数据更新
+        database.ref('studentStatus').on('value', (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                studentStatus = data;
+                updateLists();
+            }
+        });
+
+        // 初始化加载数据
+        database.ref('studentStatus').once('value')
+            .then((snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    studentStatus = data;
+                    updateLists();
+                }
+            });
+    </script>
+</body>
+</html> 
