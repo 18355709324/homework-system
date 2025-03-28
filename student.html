@@ -4,10 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>作业提交系统 - 学生端</title>
-    <!-- 更新 Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <style>
         body {
             font-family: 'Microsoft YaHei', sans-serif;
@@ -15,6 +13,7 @@
             margin: 0 auto;
             padding: 20px;
             background-color: #f0f2f5;
+            color: #333;
         }
         .header {
             text-align: center;
@@ -25,152 +24,294 @@
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
         .header h1 {
+            font-size: 28px;
             color: #1a237e;
             margin: 0;
         }
-        .login-container {
-            max-width: 400px;
-            margin: 100px auto;
-            padding: 20px;
+        .class-code-input {
             background: white;
+            padding: 30px;
             border-radius: 12px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            text-align: center;
+            margin-bottom: 20px;
         }
-        .login-form {
+        .code-input {
             display: flex;
-            flex-direction: column;
-            gap: 15px;
+            justify-content: center;
+            gap: 10px;
+            margin: 20px 0;
         }
-        .login-form input, .login-form select {
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            font-size: 16px;
+        .code-input input {
+            width: 40px;
+            height: 50px;
+            font-size: 24px;
+            text-align: center;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            margin: 0 5px;
+            text-transform: uppercase;
         }
-        .login-form button {
-            padding: 12px;
+        .code-input input:focus {
+            border-color: #1a237e;
+            outline: none;
+        }
+        .join-button {
             background: #1a237e;
             color: white;
             border: none;
+            padding: 12px 30px;
             border-radius: 6px;
-            cursor: pointer;
             font-size: 16px;
+            cursor: pointer;
+            transition: background 0.3s ease;
         }
-        .login-form button:hover {
+        .join-button:hover {
             background: #0d1657;
+        }
+        .join-button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
         }
         .student-card {
             background: white;
-            padding: 20px;
+            padding: 12px;
             border-radius: 12px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+            opacity: 1;
+            border: 1px solid #e3f2fd;
+            position: relative;
+            overflow: hidden;
+            transform: translateY(0);
+        }
+        .student-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.12);
+        }
+        .student-info {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        .student-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1a237e;
             text-align: center;
+            padding: 4px 0;
+            margin-bottom: 8px;
+            border-bottom: 1px solid #e3f2fd;
+        }
+        .teacher-name {
+            font-size: 14px;
+            color: #666;
+        }
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 16px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        .status-unsubmitted {
+            background: #ffebee;
+            color: #c62828;
+        }
+        .status-submitted {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+        .status-needs-revision {
+            background: #fff3e0;
+            color: #ef6c00;
+        }
+        .status-completed {
+            background: #e3f2fd;
+            color: #1565c0;
         }
         .submit-button {
             background: #4caf50;
             color: white;
             border: none;
-            padding: 10px 20px;
-            border-radius: 6px;
+            padding: 8px 16px;
+            border-radius: 4px;
             cursor: pointer;
-            font-size: 16px;
-            margin-top: 10px;
+            font-size: 14px;
         }
         .submit-button:hover {
             background: #388e3c;
         }
-        .withdraw-button {
-            background: #ff9800;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 6px;
+        .submit-button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        #student-container {
+            display: none;
+        }
+        .student-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+            padding: 10px;
+        }
+        .homework-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            padding: 2px;
+        }
+        .homework-item {
+            background: #f8f9fa;
+            padding: 8px 4px;
+            border-radius: 8px;
             cursor: pointer;
-            font-size: 16px;
-            margin-top: 10px;
-            margin-left: 10px;
+            transition: all 0.3s ease;
+            text-align: center;
+            font-size: 12px;
+            border: 1px solid #e0e0e0;
+            position: relative;
+            overflow: hidden;
+            height: auto;
+            opacity: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 60px;
         }
-        .withdraw-button:hover {
-            background: #f57c00;
+        .homework-item:hover {
+            background: #e3f2fd;
+            transform: translateY(-2px);
+            box-shadow: 0 2px 8px rgba(26, 35, 126, 0.15);
+            border-color: #1a237e;
         }
-        .status-badge {
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 16px;
-            font-size: 14px;
-            margin-top: 10px;
+        .homework-item:active {
+            transform: translateY(1px) scale(0.98);
         }
-        .status-unsubmitted {
-            background: #f5f5f5;
-            color: #666;
+        .homework-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #1a237e;
+            margin-bottom: 4px;
         }
-        .status-submitted {
-            background: #4caf50;
-            color: white;
+        .homework-item.submitted {
+            background: #7986cb !important;
+            color: white !important;
+            border-color: #5c6bc0 !important;
+            pointer-events: none;
         }
-        .status-needs-revision {
-            background: #ff9800;
-            color: white;
-        }
-        .status-completed {
-            background: #2196f3;
-            color: white;
-        }
-        .feedback {
-            margin-top: 10px;
-            font-style: italic;
-            color: #666;
-        }
-        #app-container {
+        .homework-item.submitted .homework-title {
             display: none;
         }
-        #login-container {
-            display: none;
-        }
-        .logout-button {
+        .homework-item.submitted::after {
+            content: '已提交';
             position: absolute;
-            top: 20px;
-            right: 20px;
-            padding: 8px 16px;
-            background: #f44336;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 14px;
+            font-weight: bold;
             color: white;
-            border: none;
+        }
+        .homework-item.needs-revision {
+            background: #fff3e0;
+            color: #ef6c00;
+            animation: pulse 2s infinite;
+            border-color: #ef6c00;
+        }
+        .homework-item.needs-revision::after {
+            content: '需订正';
+            position: absolute;
+            bottom: 4px;
+            right: 4px;
+            font-size: 10px;
+            padding: 2px 6px;
             border-radius: 4px;
-            cursor: pointer;
+            background: rgba(239, 108, 0, 0.15);
+            color: #ef6c00;
+            font-weight: 500;
+        }
+        .homework-item.completed {
+            background: #4caf50;
+            opacity: 0.9;
+            pointer-events: none;
+            border-color: #4caf50;
+            transform: scale(0.95);
+        }
+        .grade-display {
+            font-size: 14px;
+            color: #1a237e;
+            font-weight: bold;
+            margin-top: 4px;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 2px 6px;
+            border-radius: 4px;
+            display: inline-block;
+        }
+        .status-text {
+            display: none;
+        }
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+                box-shadow: 0 0 0 0 rgba(239, 108, 0, 0.4);
+            }
+            70% {
+                transform: scale(1.05);
+                box-shadow: 0 0 0 8px rgba(239, 108, 0, 0);
+            }
+            100% {
+                transform: scale(1);
+                box-shadow: 0 0 0 0 rgba(239, 108, 0, 0);
+            }
+        }
+        .class-info {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .class-info h2 {
+            color: #1a237e;
+            margin: 0;
+            margin-bottom: 10px;
+        }
+        .teacher-info {
+            color: #666;
+            font-size: 14px;
         }
     </style>
 </head>
 <body>
-    <!-- 登录界面 -->
-    <div id="login-container" class="login-container">
-        <h2 class="section-title">学生登录</h2>
-        <form id="login-form" class="login-form">
-            <select id="teacher-select">
-                <option value="">请选择老师</option>
-            </select>
-            <select id="student-select" disabled>
-                <option value="">请先选择老师</option>
-            </select>
-            <button type="submit">进入系统</button>
-        </form>
+    <div class="header">
+        <h1>作业提交系统 - 班级端</h1>
     </div>
 
-    <!-- 主应用界面 -->
-    <div id="app-container">
-        <button class="logout-button" onclick="logout()">退出登录</button>
-        <div class="header">
-            <h1>作业提交系统 - 学生端</h1>
+    <!-- 课堂码输入界面 -->
+    <div id="code-input-container" class="class-code-input">
+        <h2>请输入课堂码</h2>
+        <div class="code-input">
+            <input type="text" maxlength="1" class="code-digit" pattern="[0-9A-Za-z]">
+            <input type="text" maxlength="1" class="code-digit" pattern="[0-9A-Za-z]">
+            <input type="text" maxlength="1" class="code-digit" pattern="[0-9A-Za-z]">
+            <input type="text" maxlength="1" class="code-digit" pattern="[0-9A-Za-z]">
+            <input type="text" maxlength="1" class="code-digit" pattern="[0-9A-Za-z]">
+            <input type="text" maxlength="1" class="code-digit" pattern="[0-9A-Za-z]">
         </div>
-        <div class="student-card">
-            <h2 id="student-name"></h2>
-            <div id="status-badge" class="status-badge"></div>
-            <div id="feedback" class="feedback"></div>
-            <div id="action-buttons">
-                <button id="submit-button" class="submit-button" style="display: none">提交作业</button>
-                <button id="withdraw-button" class="withdraw-button" style="display: none">撤回提交</button>
-            </div>
+        <button id="join-button" class="join-button" disabled>进入班级</button>
+    </div>
+
+    <!-- 班级视图 -->
+    <div id="class-view" style="display: none;">
+        <div class="class-info">
+            <h2>班级作业状态</h2>
+            <div class="teacher-info">任课教师：<span id="teacher-name-display"></span></div>
         </div>
+        <div id="student-grid" class="student-grid"></div>
     </div>
 
     <script>
@@ -188,184 +329,209 @@
         // 初始化 Firebase
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
-        const auth = firebase.auth();
 
         let currentTeacherId = null;
-        let currentStudent = null;
-        let studentStatus = {};
+        let currentTeacherName = '';
 
-        // 加载教师列表
-        function loadTeachers() {
-            database.ref('teachers').on('value', (snapshot) => {
-                const teacherSelect = document.getElementById('teacher-select');
-                teacherSelect.innerHTML = '<option value="">请选择老师</option>';
+        // 处理课堂码输入
+        const codeInputs = document.querySelectorAll('.code-digit');
+        const joinButton = document.getElementById('join-button');
+
+        codeInputs.forEach((input, index) => {
+            input.addEventListener('input', (e) => {
+                e.target.value = e.target.value.toUpperCase();
                 
-                snapshot.forEach((teacherSnapshot) => {
-                    const teacherId = teacherSnapshot.key;
-                    // 获取教师的个人信息
-                    database.ref(`teachers/${teacherId}/profile`).once('value')
-                        .then((profileSnapshot) => {
-                            const profile = profileSnapshot.val() || {};
-                            const teacherName = profile.displayName || `老师 ${teacherId.slice(0, 6)}`;
-                            const option = document.createElement('option');
-                            option.value = teacherId;
-                            option.textContent = teacherName;
-                            teacherSelect.appendChild(option);
-                        });
+                if (e.target.value && index < codeInputs.length - 1) {
+                    codeInputs[index + 1].focus();
+                }
+                
+                checkCodeComplete();
+            });
+
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Backspace' && !e.target.value && index > 0) {
+                    codeInputs[index - 1].focus();
+                }
+            });
+        });
+
+        function checkCodeComplete() {
+            const code = Array.from(codeInputs).map(input => input.value).join('');
+            joinButton.disabled = code.length !== 6;
+        }
+
+        // 加入班级
+        joinButton.addEventListener('click', () => {
+            const code = Array.from(codeInputs).map(input => input.value).join('');
+            
+            database.ref(`classCodes/${code}`).once('value')
+                .then((snapshot) => {
+                    if (snapshot.exists()) {
+                        const data = snapshot.val();
+                        currentTeacherId = data.teacherId;
+                        return database.ref(`teachers/${currentTeacherId}/profile`).once('value');
+                    } else {
+                        throw new Error('课堂码无效或已过期');
+                    }
+                })
+                .then((snapshot) => {
+                    if (snapshot.exists()) {
+                        const teacherData = snapshot.val();
+                        currentTeacherName = teacherData.displayName;
+                        document.getElementById('teacher-name-display').textContent = currentTeacherName;
+                        
+                        // 显示班级视图
+                        document.getElementById('code-input-container').style.display = 'none';
+                        document.getElementById('class-view').style.display = 'block';
+                        
+                        // 开始监听学生数据
+                        loadClassData();
+                    }
+                })
+                .catch(error => {
+                    alert(error.message || '进入班级失败，请重试');
                 });
+        });
+
+        function loadClassData() {
+            database.ref(`teachers/${currentTeacherId}`).on('value', (snapshot) => {
+                const data = snapshot.val() || {};
+                const students = data.students || [];
+                const statusData = data.studentStatus || {};
+                
+                updateStudentGrid(students, statusData);
             });
         }
 
-        // 当选择教师时加载学生列表
-        document.getElementById('teacher-select').addEventListener('change', (e) => {
-            const teacherId = e.target.value;
-            const studentSelect = document.getElementById('student-select');
+        function updateStudentGrid(students, statusData) {
+            const grid = document.getElementById('student-grid');
+            grid.innerHTML = '';
             
-            if (teacherId) {
-                database.ref(`teachers/${teacherId}/students`).once('value')
-                    .then((snapshot) => {
-                        const students = snapshot.val() || [];
-                        studentSelect.innerHTML = '<option value="">请选择你的姓名</option>';
-                        
-                        // 确保students是数组
-                        const studentArray = Array.isArray(students) ? students : Object.values(students);
-                        
-                        // 按照姓名排序
-                        studentArray.sort().forEach(student => {
-                            const option = document.createElement('option');
-                            option.value = student;
-                            option.textContent = student;
-                            studentSelect.appendChild(option);
-                        });
-                        studentSelect.disabled = false;
+            students.sort().forEach(student => {
+                const studentStatus = statusData[student] || {};
+                
+                // 检查是否需要显示这个学生
+                const shouldShow = Object.keys(studentStatus).length === 0 || // 新学生
+                    Object.entries(studentStatus).some(([key, value]) => {
+                        const status = value.status;
+                        return status === 'unsubmitted' || status === 'needs-revision';
                     });
-            } else {
-                studentSelect.innerHTML = '<option value="">请先选择老师</option>';
-                studentSelect.disabled = true;
-            }
-        });
+                
+                if (shouldShow) {
+                    const card = createStudentCard(student, statusData);
+                    grid.appendChild(card);
+                }
+            });
+        }
 
-        // 登录表单处理
-        document.getElementById('login-form').addEventListener('submit', (e) => {
-            e.preventDefault();
-            const teacherId = document.getElementById('teacher-select').value;
-            const studentName = document.getElementById('student-select').value;
+        function createStudentCard(student, statusData) {
+            const card = document.createElement('div');
+            card.className = 'student-card';
+            card.id = `student-card-${student}`;
             
-            if (!teacherId || !studentName) {
-                alert('请选择老师和你的姓名');
+            const name = document.createElement('div');
+            name.className = 'student-name';
+            name.textContent = student;
+            
+            const homeworkContainer = document.createElement('div');
+            homeworkContainer.className = 'homework-grid';
+            
+            // 创建四个作业的状态显示
+            for (let i = 1; i <= 4; i++) {
+                const homework = document.createElement('div');
+                homework.className = 'homework-item';
+                
+                const title = document.createElement('div');
+                title.className = 'homework-title';
+                title.textContent = `作业${i}`;
+                homework.appendChild(title);
+                
+                const homeworkData = statusData[student]?.[`homework${i}`];
+                const status = homeworkData?.status || 'unsubmitted';
+                const grade = homeworkData?.grade;
+                
+                // 根据状态设置样式
+                if (status === 'completed') {
+                    homework.classList.add('completed');
+                    const gradeDisplay = document.createElement('div');
+                    gradeDisplay.className = 'grade-display';
+                    gradeDisplay.textContent = grade || '未评分';
+                    homework.appendChild(gradeDisplay);
+                } else if (status === 'submitted') {
+                    homework.classList.add('submitted');
+                    title.style.display = 'none'; // 提交后隐藏标题
+                } else if (status === 'needs-revision') {
+                    homework.classList.add('needs-revision');
+                }
+                
+                // 只为未提交和需订正的作业添加点击事件
+                if (status === 'unsubmitted' || status === 'needs-revision') {
+                    homework.onclick = () => submitHomework(student, i, homework);
+                }
+                
+                homeworkContainer.appendChild(homework);
+            }
+            
+            card.appendChild(name);
+            card.appendChild(homeworkContainer);
+            
+            return card;
+        }
+
+        function submitHomework(student, homeworkNumber, homeworkElement) {
+            if (!currentTeacherId) {
+                alert('系统错误，请刷新页面重试');
                 return;
             }
 
-            // 检查该学生是否存在于教师的学生列表中
-            database.ref(`teachers/${teacherId}/students`).once('value')
-                .then((snapshot) => {
-                    const students = snapshot.val() || [];
-                    if (students.includes(studentName)) {
-                        currentTeacherId = teacherId;
-                        currentStudent = studentName;
-                        document.getElementById('login-container').style.display = 'none';
-                        document.getElementById('app-container').style.display = 'block';
-                        document.getElementById('student-name').textContent = studentName;
-                        loadStudentStatus();
-                    } else {
-                        alert('未找到该学生信息，请确认选择是否正确');
-                    }
-                });
-        });
-
-        // 退出登录
-        function logout() {
-            currentTeacherId = null;
-            currentStudent = null;
-            document.getElementById('login-container').style.display = 'block';
-            document.getElementById('app-container').style.display = 'none';
-            document.getElementById('teacher-select').value = '';
-            document.getElementById('student-select').innerHTML = '<option value="">请先选择老师</option>';
-            document.getElementById('student-select').disabled = true;
-        }
-
-        // 加载学生状态
-        function loadStudentStatus() {
-            database.ref(`teachers/${currentTeacherId}/studentStatus/${currentStudent}`).on('value', (snapshot) => {
-                const status = snapshot.val() || {
-                    status: 'unsubmitted',
-                    timestamp: null,
-                    feedback: []
-                };
-                updateStudentCard(status);
-            });
-        }
-
-        // 更新学生卡片显示
-        function updateStudentCard(status) {
-            const statusBadge = document.getElementById('status-badge');
-            const submitButton = document.getElementById('submit-button');
-            const withdrawButton = document.getElementById('withdraw-button');
-            const feedbackDiv = document.getElementById('feedback');
-
-            // 更新状态标签
-            statusBadge.className = `status-badge status-${status.status}`;
-            statusBadge.textContent = getStatusText(status.status);
-
-            // 更新按钮显示
-            submitButton.style.display = status.status === 'unsubmitted' ? 'inline-block' : 'none';
-            withdrawButton.style.display = status.status === 'submitted' ? 'inline-block' : 'none';
-
-            // 更新反馈信息
-            if (status.feedback && status.feedback.length > 0) {
-                const latestFeedback = status.feedback[status.feedback.length - 1];
-                feedbackDiv.textContent = `老师反馈：${latestFeedback.text}`;
-            } else {
-                feedbackDiv.textContent = '';
-            }
-        }
-
-        // 获取状态文本
-        function getStatusText(status) {
-            const statusMap = {
-                'unsubmitted': '未提交',
-                'submitted': '已提交',
-                'needs-revision': '需订正',
-                'completed': '已完成'
-            };
-            return statusMap[status] || status;
-        }
-
-        // 提交作业
-        document.getElementById('submit-button').onclick = () => {
-            const updates = {
-                status: 'submitted',
-                timestamp: new Date().toISOString()
-            };
+            // 先更新UI
+            homeworkElement.className = 'homework-item submitted';
             
-            database.ref(`teachers/${currentTeacherId}/studentStatus/${currentStudent}`)
+            // 更新数据库
+            const updates = {
+                [`studentStatus/${student}/homework${homeworkNumber}`]: {
+                    status: 'submitted',
+                    timestamp: new Date().toISOString()
+                }
+            };
+
+            database.ref(`teachers/${currentTeacherId}`)
                 .update(updates)
+                .then(() => {
+                    // 检查是否所有作业都已提交
+                    const card = document.getElementById(`student-card-${student}`);
+                    if (card) {
+                        const allHomeworkItems = card.querySelectorAll('.homework-item');
+                        const unsubmittedCount = Array.from(allHomeworkItems).filter(item => 
+                            !item.classList.contains('submitted') && 
+                            !item.classList.contains('completed') &&
+                            !item.classList.contains('needs-revision')
+                        ).length;
+                        
+                        if (unsubmittedCount === 0) {
+                            const hasRevision = Array.from(allHomeworkItems).some(item => 
+                                item.classList.contains('needs-revision')
+                            );
+                            
+                            if (!hasRevision) {
+                                setTimeout(() => {
+                                    card.classList.add('hidden');
+                                    setTimeout(() => {
+                                        if (card.parentNode) {
+                                            card.parentNode.removeChild(card);
+                                        }
+                                    }, 500);
+                                }, 300);
+                            }
+                        }
+                    }
+                })
                 .catch(error => {
                     console.error("Error submitting homework:", error);
+                    homeworkElement.className = 'homework-item';
                     alert("提交失败，请重试");
                 });
-        };
-
-        // 撤回提交
-        document.getElementById('withdraw-button').onclick = () => {
-            const updates = {
-                status: 'unsubmitted',
-                timestamp: new Date().toISOString()
-            };
-            
-            database.ref(`teachers/${currentTeacherId}/studentStatus/${currentStudent}`)
-                .update(updates)
-                .catch(error => {
-                    console.error("Error withdrawing submission:", error);
-                    alert("撤回失败，请重试");
-                });
-        };
-
-        // 页面加载时初始化
-        window.onload = () => {
-            document.getElementById('login-container').style.display = 'block';
-            loadTeachers();
-        };
+        }
     </script>
 </body>
 </html> 

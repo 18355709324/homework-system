@@ -6,382 +6,883 @@
     <title>作业提交系统 - 教师端</title>
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
     <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
         body {
             font-family: 'Microsoft YaHei', sans-serif;
+            background-color: #f0f2f5;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
             max-width: 1200px;
             margin: 0 auto;
             padding: 20px;
-            background-color: #f0f2f5;
-            color: #333;
         }
+
         .header {
-            text-align: center;
-            margin-bottom: 30px;
             background: white;
             padding: 20px;
-             border-radius: 12px;
-             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            text-align: center;
+            position: relative;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
+
         .header h1 {
-            font-size: 28px;
             color: #1a237e;
+            font-size: 24px;
             margin: 0;
+            flex: 1;
+            text-align: center;
         }
-        .container {
+
+        .header-buttons {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .header-button {
+            background: #1a237e;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .header-button:hover {
+            background: #0d1657;
+        }
+
+        .student-list-button {
+            background: #4caf50;
+        }
+
+        .student-list-button:hover {
+            background: #388e3c;
+        }
+
+        .logout-button {
+            background: #f44336;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .logout-button:hover {
+            background: #d32f2f;
+        }
+
+        .class-code-container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .class-code {
+            font-size: 36px;
+            font-weight: bold;
+            color: #1a237e;
+            letter-spacing: 4px;
+            margin: 10px 0;
+        }
+
+        .class-code-label {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .refresh-code-button {
+            background: #1a237e;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+
+        .refresh-code-button:hover {
+            background: #0d1657;
+        }
+
+        .student-management {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .student-management:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .student-management h2 {
+            color: #1a237e;
+            font-size: 20px;
+            margin-bottom: 15px;
+        }
+
+        .student-input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .student-input {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .student-input:focus {
+            border-color: #1a237e;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(26,35,126,0.1);
+        }
+
+        .add-student-button {
+            background: #4caf50;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .add-student-button:hover {
+            background: #388e3c;
+            transform: translateY(-2px);
+        }
+
+        .student-list {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 12px;
+            margin-top: 20px;
+            max-height: 300px;
+            overflow-y: auto;
+            padding: 10px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+        }
+
+        .student-tag {
+            background: #e3f2fd;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: all 0.3s ease;
+        }
+
+        .student-tag:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .student-search {
+            margin: 15px 0;
+            display: flex;
+            gap: 10px;
+        }
+
+        .student-search input {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .student-search input:focus {
+            outline: none;
+            border-color: #1a237e;
+            box-shadow: 0 0 0 2px rgba(26,35,126,0.1);
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 15px;
+        }
+
+        .pagination button {
+            padding: 6px 12px;
+            border: 1px solid #e0e0e0;
+            background: white;
+            border-radius: 4px;
+            cursor: pointer;
+            color: #666;
+        }
+
+        .pagination button:hover {
+            background: #f5f5f5;
+        }
+
+        .pagination button.active {
+            background: #1a237e;
+            color: white;
+            border-color: #1a237e;
+        }
+
+        .student-stats {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .delete-student {
+            background: #ff5252;
+            color: white;
+            border: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+
+        .delete-student:hover {
+            background: #d50000;
+        }
+
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
             gap: 20px;
         }
-        .section {
+
+        .status-section {
             background: white;
             padding: 20px;
             border-radius: 12px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
-        .student-card {
-            background: #fff;
-            border: 1px solid #e0e0e0;
-            padding: 15px;
-            margin: 8px 0;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-        .student-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        }
-        .submitted {
-            background: #e8f5e9;
-            border-color: #4caf50;
-        }
-        .needs-revision {
-            background: #fff3e0;
-            border-color: #ff9800;
-        }
-        .completed {
-            background: #e3f2fd;
-            border-color: #2196f3;
-        }
-        .section-title {
-            font-size: 20px;
+
+        .status-section h2 {
             color: #1a237e;
+            font-size: 18px;
             margin-bottom: 15px;
             padding-bottom: 10px;
             border-bottom: 2px solid #e3f2fd;
         }
-        .status-badge {
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 16px;
-            font-size: 14px;
-            font-weight: 500;
+
+        .status-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
         }
-        .status-submitted {
-            background: #4caf50;
-            color: white;
-        }
-        .status-needs-revision {
-            background: #ff9800;
-            color: white;
-        }
-        .status-completed {
-            background: #2196f3;
-            color: white;
-        }
-        .time-stamp {
-            font-size: 12px;
-            color: #666;
-            margin-left: 8px;
-        }
-        .teacher-controls {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        .reset-button {
-            background: #f44336;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 16px;
-            transition: background 0.3s ease;
-        }
-        .reset-button:hover {
-            background: #da190b;
-        }
-        .withdraw-button {
-            background: #ff9800;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 14px;
-            transition: background 0.3s ease;
-            margin-left: 10px;
-        }
-        .withdraw-button:hover {
-            background: #f57c00;
-        }
+
         .student-card {
-            position: relative;
-        }
-        .action-buttons {
-            position: absolute;
-            right: 10px;
-            top: 50%;
-            transform: translateY(-50%);
-            display: none;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            transition: all 0.3s ease;
+            border: 1px solid #e9ecef;
+            display: flex;
+            flex-direction: column;
             gap: 10px;
         }
-        .student-card:hover .action-buttons {
-            display: flex;
+
+        .student-card:hover {
+            transform: translateY(-2px);
+            border-color: #1a237e;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
+
+        .student-name {
+            font-weight: 500;
+            text-align: center;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .homework-status {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        }
+
+        .homework-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            padding: 8px;
+            border-radius: 4px;
+            background: #fff;
+            border: 1px solid #e0e0e0;
+        }
+
+        .homework-title {
+            font-size: 12px;
+            color: #666;
+            text-align: center;
+        }
+
+        .homework-actions {
+            display: flex;
+            gap: 4px;
+        }
+
         .action-button {
-            padding: 6px 12px;
+            flex: 1;
+            padding: 4px;
             border: none;
             border-radius: 4px;
             cursor: pointer;
-            font-size: 14px;
+            font-size: 12px;
             color: white;
-            transition: all 0.3s ease;
         }
-        .revision-button {
+
+        .needs-revision {
             background: #ff9800;
         }
-        .complete-button {
+
+        .needs-revision:hover {
+            background: #f57c00;
+        }
+
+        .completed {
             background: #4caf50;
         }
-        .action-button:hover {
-            transform: scale(1.05);
+
+        .completed:hover {
+            background: #388e3c;
         }
-        /* 登录表单样式 */
-        .login-container {
+
+        .login-container, .register-container {
             max-width: 400px;
-            margin: 100px auto;
-            padding: 20px;
+            margin: 40px auto;
+            padding: 30px;
             background: white;
             border-radius: 12px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
-        .login-form {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
+
+        .form-group {
+            margin-bottom: 20px;
         }
-        .login-form input {
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #666;
+        }
+
+        .form-group input {
+            width: 100%;
             padding: 10px;
             border: 1px solid #ddd;
-            border-radius: 6px;
-            font-size: 16px;
+            border-radius: 4px;
+            font-size: 14px;
         }
-        .login-form button {
+
+        .form-button {
+            width: 100%;
             padding: 12px;
             background: #1a237e;
             color: white;
             border: none;
-            border-radius: 6px;
+            border-radius: 4px;
             cursor: pointer;
             font-size: 16px;
         }
-        .login-form button:hover {
+
+        .form-button:hover {
             background: #0d1657;
         }
-        .register-button {
-            background: #4caf50 !important;
-        }
-        .register-button:hover {
-            background: #388e3c !important;
-        }
-        .form-group {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-        }
-        .form-group label {
-            font-size: 14px;
-            color: #666;
-        }
+
         .switch-form {
             text-align: center;
-            margin-top: 15px;
+            margin-top: 20px;
             color: #666;
         }
+
         .switch-form a {
             color: #1a237e;
             text-decoration: none;
             cursor: pointer;
         }
+
         .switch-form a:hover {
             text-decoration: underline;
         }
-        /* 学生管理面板样式 */
-        .student-management {
-            background: white;
-            padding: 20px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+
+        .import-container {
+            margin-top: 10px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 1px dashed #ddd;
         }
-        .student-management h2 {
-            color: #1a237e;
-            margin-bottom: 15px;
-        }
-        .student-form {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 15px;
-        }
-        .student-form input {
-            flex: 1;
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-        }
-        .student-form button {
-            padding: 8px 16px;
-            background: #4caf50;
+
+        .import-button {
+            background: #1a237e;
             color: white;
             border: none;
+            padding: 8px 16px;
             border-radius: 4px;
             cursor: pointer;
+            font-size: 14px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
         }
-        .student-list {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-            gap: 10px;
+
+        .import-button:hover {
+            background: #0d1657;
         }
-        .student-item {
+
+        .import-note {
+            font-size: 12px;
+            color: #666;
+            margin-top: 8px;
+        }
+
+        #excel-file {
+            display: none;
+        }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            z-index: 1001;
+            width: 90%;
+            max-width: 400px;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: #666;
+            cursor: pointer;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+
+        .modal-close:hover {
+            background: #f5f5f5;
+            color: #333;
+        }
+
+        .class-code {
+            font-size: 48px;
+            font-weight: bold;
+            color: #1a237e;
+            letter-spacing: 8px;
+            margin: 20px 0;
+            text-align: center;
+            font-family: 'Courier New', monospace;
+        }
+
+        .class-code-label {
+            color: #666;
+            font-size: 14px;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .refresh-code-button {
+            background: #1a237e;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-top: 20px;
+            width: 100%;
+            transition: all 0.3s ease;
+        }
+
+        .refresh-code-button:hover {
+            background: #0d1657;
+            transform: translateY(-2px);
+        }
+
+        .student-modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            z-index: 1001;
+            width: 90%;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .student-modal-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 8px;
-            background: #f5f5f5;
-            border-radius: 4px;
+            margin-bottom: 20px;
         }
-        .student-item button {
-            padding: 4px 8px;
-            background: #f44336;
-            color: white;
-            border: none;
-            border-radius: 4px;
+
+        .student-modal-title {
+            font-size: 20px;
+            color: #1a237e;
+            margin: 0;
+        }
+
+        .student-management-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .grade-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .grade-modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+            position: relative;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+        }
+
+        .grade-options {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        .grade-button {
+            padding: 12px;
+            border: 1px solid #1a237e;
+            border-radius: 8px;
+            background: white;
+            color: #1a237e;
             cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 16px;
+            font-weight: bold;
         }
-        .logout-button {
+
+        .grade-button:hover {
+            background: #1a237e;
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .modal-close {
             position: absolute;
-            top: 20px;
-            right: 20px;
-            padding: 8px 16px;
-            background: #f44336;
-            color: white;
+            right: 10px;
+            top: 10px;
+            background: none;
             border: none;
-            border-radius: 4px;
+            font-size: 24px;
             cursor: pointer;
+            color: #666;
         }
-        #app-container {
-            display: none;
+
+        .modal-close:hover {
+            color: #1a237e;
         }
-        #login-container {
-            display: none;
+
+        .grade-stats {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .grade-stats h3 {
+            color: #1a237e;
+            margin-bottom: 10px;
+        }
+
+        .grade-bar {
+            height: 20px;
+            background: #e3f2fd;
+            border-radius: 10px;
+            margin: 5px 0;
+            overflow: hidden;
+        }
+
+        .grade-fill {
+            height: 100%;
+            background: #1a237e;
+            transition: width 0.3s ease;
+        }
+
+        .grade-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            font-size: 14px;
         }
     </style>
 </head>
 <body>
-    <!-- 登录界面 -->
-    <div id="login-container" class="login-container">
-        <h2 class="section-title">教师登录</h2>
-        <form id="login-form" class="login-form">
+    <div class="container">
+        <!-- 登录表单 -->
+        <div id="login-container" class="login-container">
+            <h2 style="text-align: center; margin-bottom: 20px; color: #1a237e;">教师登录</h2>
             <div class="form-group">
-                <label for="login-email">邮箱地址</label>
-                <input type="email" id="login-email" placeholder="请输入邮箱" required>
+                <label for="login-email">邮箱</label>
+                <input type="email" id="login-email" required>
             </div>
             <div class="form-group">
                 <label for="login-password">密码</label>
-                <input type="password" id="login-password" placeholder="请输入密码" required>
+                <input type="password" id="login-password" required>
             </div>
-            <button type="submit">登录</button>
-        </form>
-        <div class="switch-form">
-            还没有账号？<a onclick="showRegisterForm()">立即注册</a>
+            <button class="form-button" onclick="login()">登录</button>
+            <div class="switch-form">
+                还没有账号？<a onclick="showRegister()">立即注册</a>
+            </div>
         </div>
-    </div>
 
-    <!-- 注册界面 -->
-    <div id="register-container" class="login-container" style="display: none;">
-        <h2 class="section-title">教师注册</h2>
-        <form id="register-form" class="login-form">
+        <!-- 注册表单 -->
+        <div id="register-container" class="register-container" style="display: none;">
+            <h2 style="text-align: center; margin-bottom: 20px; color: #1a237e;">教师注册</h2>
             <div class="form-group">
                 <label for="register-name">姓名</label>
-                <input type="text" id="register-name" placeholder="请输入您的姓名" required>
+                <input type="text" id="register-name" required>
             </div>
             <div class="form-group">
-                <label for="register-email">邮箱地址</label>
-                <input type="email" id="register-email" placeholder="请输入邮箱" required>
+                <label for="register-email">邮箱</label>
+                <input type="email" id="register-email" required>
             </div>
             <div class="form-group">
                 <label for="register-password">密码</label>
-                <input type="password" id="register-password" placeholder="请设置密码（至少6位）" required minlength="6">
+                <input type="password" id="register-password" required>
             </div>
-            <div class="form-group">
-                <label for="register-password-confirm">确认密码</label>
-                <input type="password" id="register-password-confirm" placeholder="请再次输入密码" required minlength="6">
+            <button class="form-button" onclick="register()">注册</button>
+            <div class="switch-form">
+                已有账号？<a onclick="showLogin()">立即登录</a>
             </div>
-            <button type="submit" class="register-button">注册</button>
-        </form>
-        <div class="switch-form">
-            已有账号？<a onclick="showLoginForm()">立即登录</a>
+        </div>
+
+        <!-- 主应用界面 -->
+        <div id="app-container" style="display: none;">
+            <div class="header">
+                <h1>作业提交系统 - 教师端</h1>
+                <div class="header-buttons">
+                    <button class="header-button" onclick="showClassCodeModal()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8h5z" fill="currentColor"/>
+                        </svg>
+                        课堂码
+                    </button>
+                    <button class="header-button student-list-button" onclick="showStudentModal()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5s-3 1.34-3 3 1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5z" fill="currentColor"/>
+                        </svg>
+                        学生名单
+                    </button>
+                    <button class="header-button" onclick="showResetModal()" style="background: #ff9800;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z" fill="currentColor"/>
+                        </svg>
+                        重置作业
+                    </button>
+                    <button class="header-button logout-button" onclick="logout()">退出登录</button>
+                </div>
+            </div>
+
+            <!-- 课堂码弹窗 -->
+            <div id="class-code-modal" class="modal-overlay">
+                <div class="modal">
+                    <button class="modal-close" onclick="hideClassCodeModal()">&times;</button>
+                    <div class="class-code-label">课堂码（学生提交作业需要输入）</div>
+                    <div id="class-code" class="class-code">------</div>
+                    <button class="refresh-code-button" onclick="refreshClassCode()">刷新课堂码</button>
+                </div>
+            </div>
+
+            <!-- 学生名单弹窗 -->
+            <div id="student-modal" class="modal-overlay">
+                <div class="student-modal">
+                    <div class="student-modal-header">
+                        <h2 class="student-modal-title">学生名单管理</h2>
+                        <button class="modal-close" onclick="hideStudentModal()">&times;</button>
+                    </div>
+                    
+                    <div class="student-management-controls">
+                        <div class="student-input-group">
+                            <input type="text" id="student-name-input" class="student-input" placeholder="输入学生姓名">
+                            <button class="add-student-button" onclick="addStudent()">添加学生</button>
+                        </div>
+                        
+                        <div class="import-container">
+                            <input type="file" id="excel-file" accept=".xlsx, .xls" onchange="handleExcelUpload(event)">
+                            <button class="import-button" onclick="document.getElementById('excel-file').click()">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" fill="currentColor"/>
+                                </svg>
+                                导入Excel表格
+                            </button>
+                            <div class="import-note">支持.xlsx或.xls格式，第一列为学生姓名</div>
+                        </div>
+                    </div>
+
+                    <div class="student-stats">
+                        <span>总人数：<span id="total-students">0</span></span>
+                        <span>当前显示：<span id="showing-students">0</span></span>
+                    </div>
+
+                    <div class="student-search">
+                        <input type="text" id="student-search" placeholder="搜索学生姓名...">
+                    </div>
+
+                    <div id="student-list" class="student-list"></div>
+                    
+                    <div class="pagination" id="pagination"></div>
+                </div>
+            </div>
+
+            <!-- 作业状态网格 -->
+            <div class="status-grid">
+                <div class="status-section">
+                    <h2>未提交作业</h2>
+                    <div id="unsubmitted-list" class="status-cards"></div>
+                </div>
+                <div class="status-section">
+                    <h2>已提交作业</h2>
+                    <div id="submitted-list" class="status-cards"></div>
+                </div>
+                <div class="status-section">
+                    <h2>需要订正</h2>
+                    <div id="revision-list" class="status-cards"></div>
+                </div>
+                <div class="status-section">
+                    <h2>已完成</h2>
+                    <div id="completed-list" class="status-cards"></div>
+                </div>
+            </div>
+
+            <!-- 添加重置确认弹窗 -->
+            <div id="reset-modal" class="modal-overlay">
+                <div class="modal">
+                    <button class="modal-close" onclick="hideResetModal()">&times;</button>
+                    <h2 style="color: #ff9800; margin-bottom: 20px; text-align: center;">重置作业确认</h2>
+                    <p style="margin-bottom: 20px; text-align: center;">确定要重置所有学生的作业状态吗？<br>此操作将把所有作业状态重置为"未提交"。</p>
+                    <div style="display: flex; justify-content: center; gap: 10px;">
+                        <button class="form-button" onclick="resetAllHomework()" style="background: #ff9800; width: auto; padding: 8px 20px;">确认重置</button>
+                        <button class="form-button" onclick="hideResetModal()" style="background: #666; width: auto; padding: 8px 20px;">取消</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 评分弹窗 -->
+            <div class="grade-modal" id="grade-modal">
+                <div class="grade-modal-content">
+                    <button class="modal-close" onclick="hideGradeModal()">&times;</button>
+                    <h2 style="color: #1a237e; margin-bottom: 20px;">作业评分</h2>
+                    <p id="grade-student-info" style="margin-bottom: 20px;"></p>
+                    <div class="grade-options">
+                        <button class="grade-button" onclick="submitGrade('A+')">A+</button>
+                        <button class="grade-button" onclick="submitGrade('A')">A</button>
+                        <button class="grade-button" onclick="submitGrade('A-')">A-</button>
+                        <button class="grade-button" onclick="submitGrade('B')">B</button>
+                        <button class="grade-button" onclick="submitGrade('C')">C</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 添加评分统计区域 -->
+            <div class="status-section">
+                <h2>作业评分统计</h2>
+                <div class="grade-stats">
+                    <h3>评分分布</h3>
+                    <div id="grade-distribution"></div>
+                </div>
+            </div>
         </div>
     </div>
 
-    <!-- 主应用界面 -->
-    <div id="app-container">
-        <button class="logout-button" onclick="logout()">退出登录</button>
-        <div class="header">
-            <h1>作业提交系统 - 教师端</h1>
-        </div>
-
-        <!-- 学生管理面板 -->
-        <div class="student-management">
-            <h2>学生管理</h2>
-            <div class="student-form">
-                <input type="text" id="new-student-name" placeholder="输入学生姓名">
-                <button onclick="addStudent()">添加学生</button>
-            </div>
-            <div id="student-list" class="student-list"></div>
-        </div>
-
-        <div class="teacher-controls">
-            <button class="reset-button" onclick="resetAllStatus()">重置所有状态</button>
-        </div>
-
-        <div class="container">
-            <div class="section">
-                <h2 class="section-title">未提交作业</h2>
-                <div id="unsubmitted-list"></div>
-            </div>
-            <div class="section">
-                <h2 class="section-title">已提交作业</h2>
-                <div id="submitted-list"></div>
-            </div>
-            <div class="section">
-                <h2 class="section-title">需订正</h2>
-                <div id="revision-list"></div>
-            </div>
-            <div class="section">
-                <h2 class="section-title">已完成</h2>
-                <div id="completed-list"></div>
-            </div>
-        </div>
-    </div>
-
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script>
         // Firebase 配置
         const firebaseConfig = {
@@ -396,383 +897,709 @@
 
         // 初始化 Firebase
         firebase.initializeApp(firebaseConfig);
-        const database = firebase.database();
         const auth = firebase.auth();
+        const database = firebase.database();
 
         let currentTeacherId = null;
-        let students = [];
-        let studentStatus = {};
+        let currentClassCode = null;
+        let currentGradingStudent = null;
+        let currentGradingHomework = null;
 
         // 切换到注册表单
-        function showRegisterForm() {
+        function showRegister() {
             document.getElementById('login-container').style.display = 'none';
             document.getElementById('register-container').style.display = 'block';
         }
 
         // 切换到登录表单
-        function showLoginForm() {
-            document.getElementById('register-container').style.display = 'none';
+        function showLogin() {
             document.getElementById('login-container').style.display = 'block';
+            document.getElementById('register-container').style.display = 'none';
         }
 
-        // 登录表单处理
-        document.getElementById('login-form').addEventListener('submit', (e) => {
-            e.preventDefault();
-            const email = document.getElementById('login-email').value;
-            const password = document.getElementById('login-password').value;
-            
-            auth.signInWithEmailAndPassword(email, password)
-                .catch((error) => {
-                    if (error.code === 'auth/user-not-found') {
-                        alert('该邮箱未注册');
-                    } else if (error.code === 'auth/wrong-password') {
-                        alert('密码错误');
-                    } else {
-                        alert('登录失败：' + error.message);
-                    }
-                });
-        });
-
-        // 注册表单处理
-        document.getElementById('register-form').addEventListener('submit', (e) => {
-            e.preventDefault();
-            const name = document.getElementById('register-name').value;
+        // 注册新教师
+        function register() {
             const email = document.getElementById('register-email').value;
             const password = document.getElementById('register-password').value;
-            const passwordConfirm = document.getElementById('register-password-confirm').value;
-
-            if (password !== passwordConfirm) {
-                alert('两次输入的密码不一致');
-                return;
-            }
+            const displayName = document.getElementById('register-name').value;
 
             auth.createUserWithEmailAndPassword(email, password)
                 .then((userCredential) => {
                     const user = userCredential.user;
-                    // 更新用户信息
-                    return Promise.all([
-                        user.updateProfile({
-                            displayName: name
-                        }),
-                        // 保存教师信息到数据库
-                        database.ref(`teachers/${user.uid}/profile`).set({
-                            displayName: name,
-                            email: email,
-                            createdAt: new Date().toISOString()
-                        })
-                    ]);
-                })
-                .then(() => {
-                    alert('注册成功！');
-                    showLoginForm(); // 注册成功后显示登录表单
+                    return database.ref(`teachers/${user.uid}/profile`).set({
+                        email: email,
+                        displayName: displayName
+                    });
                 })
                 .catch((error) => {
-                    if (error.code === 'auth/email-already-in-use') {
-                        alert('该邮箱已被注册');
-                    } else if (error.code === 'auth/weak-password') {
-                        alert('密码强度太弱，请设置至少6位密码');
-                    } else {
-                        alert('注册失败：' + error.message);
+                    console.error("Registration error:", error);
+                    alert("注册失败：" + error.message);
+                });
+        }
+
+        // 登录
+        function login() {
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+
+            auth.signInWithEmailAndPassword(email, password)
+                .catch((error) => {
+                    console.error("Login error:", error);
+                    alert("登录失败：" + error.message);
+                });
+        }
+
+        // 退出登录
+        function logout() {
+            auth.signOut()
+                .catch((error) => {
+                    console.error("Logout error:", error);
+                    alert("退出失败：" + error.message);
+                });
+        }
+
+        // 生成6位随机课堂码
+        function generateClassCode() {
+            const chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            let code = '';
+            for (let i = 0; i < 6; i++) {
+                code += chars[Math.floor(Math.random() * chars.length)];
+            }
+            return code;
+        }
+
+        // 刷新课堂码
+        function refreshClassCode() {
+            const newCode = generateClassCode();
+            currentClassCode = newCode;
+            
+            // 更新数据库中的课堂码
+            database.ref(`teachers/${currentTeacherId}/classCode`).set(newCode)
+                .then(() => {
+                    document.getElementById('class-code').textContent = newCode;
+                    // 创建课堂码到教师ID的映射
+                    return database.ref(`classCodes/${newCode}`).set({
+                        teacherId: currentTeacherId,
+                        timestamp: new Date().toISOString()
+                    });
+                })
+                .catch(error => {
+                    console.error("Error updating class code:", error);
+                    alert("更新课堂码失败，请重试");
+                });
+        }
+
+        // 清理过期的课堂码
+        function cleanupOldClassCodes() {
+            const oneDayAgo = new Date();
+            oneDayAgo.setDate(oneDayAgo.getDate() - 1);
+            
+            database.ref('classCodes').once('value', (snapshot) => {
+                const codes = snapshot.val() || {};
+                Object.entries(codes).forEach(([code, data]) => {
+                    if (new Date(data.timestamp) < oneDayAgo) {
+                        database.ref(`classCodes/${code}`).remove();
                     }
                 });
-        });
+            });
+        }
 
-        // 监听认证状态
+        // 添加学生
+        function addStudent() {
+            const input = document.getElementById('student-name-input');
+            const studentName = input.value.trim();
+            
+            if (!studentName) {
+                alert("请输入学生姓名");
+                return;
+            }
+
+            const studentsRef = database.ref(`teachers/${currentTeacherId}/students`);
+            
+            studentsRef.once('value')
+                .then((snapshot) => {
+                    const students = snapshot.val() || [];
+                    if (students.includes(studentName)) {
+                        alert("该学生已存在");
+                        return;
+                    }
+                    
+                    const newStudents = [...students, studentName];
+                    return studentsRef.set(newStudents);
+                })
+                .then(() => {
+                    input.value = '';
+                    loadStudentList();
+                })
+                .catch(error => {
+                    console.error("Error adding student:", error);
+                    alert("添加学生失败，请重试");
+                });
+        }
+
+        // 删除学生
+        function deleteStudent(studentName) {
+            if (!confirm(`确定要删除学生"${studentName}"吗？`)) {
+                return;
+            }
+
+            const studentsRef = database.ref(`teachers/${currentTeacherId}/students`);
+            
+            studentsRef.once('value')
+                .then((snapshot) => {
+                    const students = snapshot.val() || [];
+                    const newStudents = students.filter(s => s !== studentName);
+                    return studentsRef.set(newStudents);
+                })
+                .then(() => {
+                    // 同时删除该学生的状态记录
+                    return database.ref(`teachers/${currentTeacherId}/studentStatus/${studentName}`).remove();
+                })
+                .then(() => {
+                    loadStudentList();
+                })
+                .catch(error => {
+                    console.error("Error deleting student:", error);
+                    alert("删除学生失败，请重试");
+                });
+        }
+
+        // 加载学生列表
+        function loadStudentList() {
+            database.ref(`teachers/${currentTeacherId}/students`).once('value')
+                .then((snapshot) => {
+                    const students = snapshot.val() || [];
+                    filteredStudents = students;
+                    updateStudentStats(students.length, students.length);
+                    displayStudents(1);
+                });
+        }
+
+        // 更新作业状态
+        function updateHomeworkStatus(student, homework, status) {
+            const updates = {
+                [`homework${homework}`]: {
+                    status: status,
+                    timestamp: new Date().toISOString()
+                }
+            };
+
+            database.ref(`teachers/${currentTeacherId}/studentStatus/${student}`)
+                .update(updates)
+                .catch(error => {
+                    console.error("Error updating homework status:", error);
+                    alert("更新状态失败，请重试");
+                });
+        }
+
+        // 加载作业状态列表
+        function loadStatusLists() {
+            database.ref(`teachers/${currentTeacherId}`).on('value', (snapshot) => {
+                const data = snapshot.val() || {};
+                const students = data.students || [];
+                const statusData = data.studentStatus || {};
+
+                // 清空所有列表
+                document.getElementById('unsubmitted-list').innerHTML = '';
+                document.getElementById('submitted-list').innerHTML = '';
+                document.getElementById('revision-list').innerHTML = '';
+                document.getElementById('completed-list').innerHTML = '';
+
+                // 对学生按姓名排序
+                students.sort().forEach(student => {
+                    const studentStatus = statusData[student] || {};
+                    let hasUnsubmitted = false;
+                    let hasSubmitted = false;
+                    let hasRevision = false;
+                    let hasCompleted = false;
+
+                    // 检查四个作业的状态
+                    for (let i = 1; i <= 4; i++) {
+                        const status = studentStatus[`homework${i}`]?.status || 'unsubmitted';
+                        switch(status) {
+                            case 'unsubmitted':
+                                hasUnsubmitted = true;
+                                break;
+                            case 'submitted':
+                                hasSubmitted = true;
+                                break;
+                            case 'needs-revision':
+                                hasRevision = true;
+                                break;
+                            case 'completed':
+                                hasCompleted = true;
+                                break;
+                        }
+                    }
+
+                    const card = createStudentStatusCard(student, studentStatus);
+                    
+                    // 根据状态添加到相应列表，但如果有已提交的作业，则不显示在未提交列表中
+                    if (hasUnsubmitted && !hasSubmitted && !hasCompleted) {
+                        document.getElementById('unsubmitted-list').appendChild(card.cloneNode(true));
+                    }
+                    if (hasSubmitted) {
+                        document.getElementById('submitted-list').appendChild(card.cloneNode(true));
+                    }
+                    if (hasRevision) {
+                        document.getElementById('revision-list').appendChild(card.cloneNode(true));
+                    }
+                    if (hasCompleted) {
+                        document.getElementById('completed-list').appendChild(card.cloneNode(true));
+                    }
+                });
+
+                // 更新评分统计
+                updateGradeStats();
+            });
+        }
+
+        // 创建学生状态卡片
+        function createStudentStatusCard(student, statusData) {
+            const card = document.createElement('div');
+            card.className = 'student-card';
+            
+            const name = document.createElement('div');
+            name.className = 'student-name';
+            name.textContent = student;
+            
+            const homeworkStatus = document.createElement('div');
+            homeworkStatus.className = 'homework-status';
+            
+            for (let i = 1; i <= 4; i++) {
+                const homework = document.createElement('div');
+                homework.className = 'homework-item';
+                
+                const title = document.createElement('div');
+                title.className = 'homework-title';
+                title.textContent = `作业${i}`;
+                
+                const status = statusData[`homework${i}`]?.status || 'unsubmitted';
+                const actions = document.createElement('div');
+                actions.className = 'homework-actions';
+                
+                if (status === 'submitted') {
+                    const needsRevisionBtn = document.createElement('button');
+                    needsRevisionBtn.className = 'action-button needs-revision';
+                    needsRevisionBtn.textContent = '订正';
+                    needsRevisionBtn.onclick = function(e) {
+                        e.stopPropagation();
+                        updateHomeworkStatus(student, i, 'needs-revision');
+                    };
+                    
+                    const completedBtn = document.createElement('button');
+                    completedBtn.className = 'action-button completed';
+                    completedBtn.textContent = '完成';
+                    completedBtn.onclick = function(e) {
+                        e.stopPropagation();
+                        console.log('Opening grade modal for:', student, 'homework:', i);
+                        currentGradingStudent = student;
+                        currentGradingHomework = i;
+                        const modal = document.getElementById('grade-modal');
+                        const studentInfo = document.getElementById('grade-student-info');
+                        studentInfo.textContent = `${student} - 作业${i}`;
+                        modal.style.display = 'flex';
+                        console.log('Grade modal should be visible now');
+                    };
+                    
+                    actions.appendChild(needsRevisionBtn);
+                    actions.appendChild(completedBtn);
+                } else if (status === 'completed') {
+                    const grade = statusData[`homework${i}`]?.grade || '未评分';
+                    const statusText = document.createElement('div');
+                    statusText.style.textAlign = 'center';
+                    statusText.style.fontSize = '12px';
+                    statusText.style.color = '#666';
+                    statusText.textContent = `已完成 (${grade})`;
+                    actions.appendChild(statusText);
+                } else {
+                    const statusText = document.createElement('div');
+                    statusText.style.textAlign = 'center';
+                    statusText.style.fontSize = '12px';
+                    statusText.style.color = '#666';
+                    statusText.textContent = {
+                        'unsubmitted': '未提交',
+                        'needs-revision': '需订正',
+                        'completed': '已完成'
+                    }[status] || status;
+                    actions.appendChild(statusText);
+                }
+                
+                homework.appendChild(title);
+                homework.appendChild(actions);
+                homeworkStatus.appendChild(homework);
+            }
+            
+            card.appendChild(name);
+            card.appendChild(homeworkStatus);
+            
+            return card;
+        }
+
+        // 处理Excel文件上传
+        function handleExcelUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, {type: 'array'});
+                    
+                    // 获取第一个工作表
+                    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                    
+                    // 将工作表转换为JSON数组
+                    const jsonData = XLSX.utils.sheet_to_json(firstSheet, {header: 1});
+                    
+                    // 提取第一列的学生姓名（跳过表头）
+                    const studentNames = jsonData
+                        .slice(1) // 跳过第一行（表头）
+                        .map(row => row[0]) // 获取第一列
+                        .filter(name => name && typeof name === 'string' && name.trim()); // 过滤掉空值
+
+                    if (studentNames.length === 0) {
+                        alert('未在Excel文件中找到有效的学生姓名');
+                        return;
+                    }
+
+                    // 确认导入
+                    if (confirm(`确定要导入这${studentNames.length}名学生吗？`)) {
+                        importStudents(studentNames);
+                    }
+                } catch (error) {
+                    console.error('解析Excel文件失败:', error);
+                    alert('解析Excel文件失败，请确保文件格式正确');
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        // 批量导入学生
+        function importStudents(newStudents) {
+            const studentsRef = database.ref(`teachers/${currentTeacherId}/students`);
+            
+            studentsRef.once('value')
+                .then((snapshot) => {
+                    const existingStudents = snapshot.val() || [];
+                    
+                    // 过滤掉已存在的学生
+                    const uniqueNewStudents = newStudents.filter(
+                        student => !existingStudents.includes(student)
+                    );
+                    
+                    if (uniqueNewStudents.length === 0) {
+                        alert('所有学生已存在，无需重复导入');
+                        return;
+                    }
+
+                    // 合并现有学生和新学生列表
+                    const updatedStudents = [...existingStudents, ...uniqueNewStudents];
+                    
+                    // 更新数据库
+                    return studentsRef.set(updatedStudents);
+                })
+                .then(() => {
+                    alert(`成功导入${newStudents.length}名学生`);
+                    loadStudentList(); // 刷新学生列表显示
+                })
+                .catch(error => {
+                    console.error("Error importing students:", error);
+                    alert("导入学生失败，请重试");
+                });
+        }
+
+        // 监听登录状态
         auth.onAuthStateChanged((user) => {
             if (user) {
                 currentTeacherId = user.uid;
-                // 确保教师信息存在
-                database.ref(`teachers/${user.uid}/profile`).once('value')
+                document.getElementById('login-container').style.display = 'none';
+                document.getElementById('register-container').style.display = 'none';
+                document.getElementById('app-container').style.display = 'block';
+                
+                // 检查是否已有课堂码，没有则生成新的
+                database.ref(`teachers/${currentTeacherId}/classCode`).once('value')
                     .then((snapshot) => {
                         if (!snapshot.exists()) {
-                            // 如果教师信息不存在，创建它
-                            return database.ref(`teachers/${user.uid}/profile`).set({
-                                displayName: user.displayName || '未命名教师',
-                                email: user.email,
-                                createdAt: new Date().toISOString()
-                            });
+                            refreshClassCode();
+                        } else {
+                            currentClassCode = snapshot.val();
+                            document.getElementById('class-code').textContent = currentClassCode;
                         }
-                    })
-                    .then(() => {
-                        document.getElementById('login-container').style.display = 'none';
-                        document.getElementById('register-container').style.display = 'none';
-                        document.getElementById('app-container').style.display = 'block';
-                        loadTeacherData();
                     });
+                
+                loadStudentList();
+                loadStatusLists();
+                cleanupOldClassCodes();
             } else {
                 currentTeacherId = null;
+                currentClassCode = null;
                 document.getElementById('login-container').style.display = 'block';
                 document.getElementById('register-container').style.display = 'none';
                 document.getElementById('app-container').style.display = 'none';
             }
         });
 
-        // 退出登录
-        function logout() {
-            auth.signOut();
+        // 显示课堂码弹窗
+        function showClassCodeModal() {
+            document.getElementById('class-code-modal').style.display = 'block';
         }
 
-        // 加载教师数据
-        function loadTeacherData() {
-            database.ref(`teachers/${currentTeacherId}/students`).on('value', (snapshot) => {
-                const data = snapshot.val() || [];
-                students = Array.isArray(data) ? data : Object.values(data);
-                updateStudentList();
-                loadStudentStatus();
-            });
+        // 隐藏课堂码弹窗
+        function hideClassCodeModal() {
+            document.getElementById('class-code-modal').style.display = 'none';
         }
 
-        // 添加学生
-        function addStudent() {
-            const input = document.getElementById('new-student-name');
-            const name = input.value.trim();
+        // 点击弹窗外部关闭弹窗
+        window.onclick = function(event) {
+            const classCodeModal = document.getElementById('class-code-modal');
+            const studentModal = document.getElementById('student-modal');
+            const resetModal = document.getElementById('reset-modal');
+            const gradeModal = document.getElementById('grade-modal');
+            if (event.target === classCodeModal) {
+                hideClassCodeModal();
+            } else if (event.target === studentModal) {
+                hideStudentModal();
+            } else if (event.target === resetModal) {
+                hideResetModal();
+            } else if (event.target === gradeModal) {
+                hideGradeModal();
+            }
+        }
+
+        let currentPage = 1;
+        const studentsPerPage = 20;
+        let filteredStudents = [];
+
+        // 搜索学生
+        function searchStudents() {
+            const searchTerm = document.getElementById('student-search').value.toLowerCase();
+            database.ref(`teachers/${currentTeacherId}/students`).once('value')
+                .then((snapshot) => {
+                    const allStudents = snapshot.val() || [];
+                    filteredStudents = allStudents.filter(student => 
+                        student.toLowerCase().includes(searchTerm)
+                    );
+                    updateStudentStats(allStudents.length, filteredStudents.length);
+                    displayStudents(1);
+                });
+        }
+
+        // 更新学生统计信息
+        function updateStudentStats(total, showing) {
+            document.getElementById('total-students').textContent = total;
+            document.getElementById('showing-students').textContent = showing;
+        }
+
+        // 显示学生列表
+        function displayStudents(page) {
+            currentPage = page;
+            const start = (page - 1) * studentsPerPage;
+            const end = start + studentsPerPage;
+            const studentsToShow = filteredStudents.slice(start, end);
             
-            if (name && !students.includes(name)) {
-                students.push(name);
-                database.ref(`teachers/${currentTeacherId}/students`).set(students)
-                    .then(() => {
-                        input.value = '';
-                        // 为新学生初始化状态
-                        studentStatus[name] = {
-                            status: 'unsubmitted',
-                            timestamp: null,
-                            feedback: []
-                        };
-                        saveData();
-                    })
-                    .catch(error => {
-                        alert('添加学生失败：' + error.message);
+            const container = document.getElementById('student-list');
+            container.innerHTML = '';
+            
+            studentsToShow.forEach(student => {
+                const tag = document.createElement('div');
+                tag.className = 'student-tag';
+                tag.innerHTML = `
+                    ${student}
+                    <button class="delete-student" onclick="deleteStudent('${student}')">×</button>
+                `;
+                container.appendChild(tag);
+            });
+            
+            updatePagination();
+        }
+
+        // 更新分页
+        function updatePagination() {
+            const totalPages = Math.ceil(filteredStudents.length / studentsPerPage);
+            const pagination = document.getElementById('pagination');
+            pagination.innerHTML = '';
+            
+            if (totalPages <= 1) return;
+            
+            // 上一页按钮
+            if (currentPage > 1) {
+                const prevButton = document.createElement('button');
+                prevButton.textContent = '上一页';
+                prevButton.onclick = () => displayStudents(currentPage - 1);
+                pagination.appendChild(prevButton);
+            }
+            
+            // 页码按钮
+            for (let i = 1; i <= totalPages; i++) {
+                const pageButton = document.createElement('button');
+                pageButton.textContent = i;
+                pageButton.className = i === currentPage ? 'active' : '';
+                pageButton.onclick = () => displayStudents(i);
+                pagination.appendChild(pageButton);
+            }
+            
+            // 下一页按钮
+            if (currentPage < totalPages) {
+                const nextButton = document.createElement('button');
+                nextButton.textContent = '下一页';
+                nextButton.onclick = () => displayStudents(currentPage + 1);
+                pagination.appendChild(nextButton);
+            }
+        }
+
+        // 添加搜索输入框事件监听
+        document.getElementById('student-search').addEventListener('input', searchStudents);
+
+        // 添加以下 JavaScript 函数到 script 标签内
+        function showStudentModal() {
+            document.getElementById('student-modal').style.display = 'block';
+            loadStudentList(); // 加载学生列表
+        }
+
+        function hideStudentModal() {
+            document.getElementById('student-modal').style.display = 'none';
+        }
+
+        // 显示重置确认弹窗
+        function showResetModal() {
+            document.getElementById('reset-modal').style.display = 'block';
+        }
+
+        // 隐藏重置确认弹窗
+        function hideResetModal() {
+            document.getElementById('reset-modal').style.display = 'none';
+        }
+
+        // 重置所有学生的作业状态
+        function resetAllHomework() {
+            if (!currentTeacherId) {
+                alert('系统错误，请重新登录');
+                return;
+            }
+
+            database.ref(`teachers/${currentTeacherId}/students`).once('value')
+                .then((snapshot) => {
+                    const students = snapshot.val() || [];
+                    const updates = {};
+                    
+                    // 为每个学生重置所有作业状态
+                    students.forEach(student => {
+                        for (let i = 1; i <= 4; i++) {
+                            updates[`studentStatus/${student}/homework${i}`] = {
+                                status: 'unsubmitted',
+                                timestamp: new Date().toISOString()
+                            };
+                        }
                     });
-            } else {
-                alert('请输入有效的学生姓名，且不能重复');
-            }
-        }
-
-        // 删除学生
-        function removeStudent(name) {
-            if (confirm(`确定要删除学生"${name}"吗？`)) {
-                students = students.filter(s => s !== name);
-                delete studentStatus[name];
-                
-                Promise.all([
-                    database.ref(`teachers/${currentTeacherId}/students`).set(students),
-                    database.ref(`teachers/${currentTeacherId}/studentStatus/${name}`).remove()
-                ]).then(() => {
-                    updateStudentList();
-                    updateLists();
-                }).catch(error => {
-                    alert('删除学生失败：' + error.message);
-                });
-            }
-        }
-
-        // 更新学生列表显示
-        function updateStudentList() {
-            const list = document.getElementById('student-list');
-            list.innerHTML = '';
-            
-            students.forEach(name => {
-                const item = document.createElement('div');
-                item.className = 'student-item';
-                
-                const nameSpan = document.createElement('span');
-                nameSpan.textContent = name;
-                
-                const deleteButton = document.createElement('button');
-                deleteButton.textContent = '删除';
-                deleteButton.onclick = () => removeStudent(name);
-                
-                item.appendChild(nameSpan);
-                item.appendChild(deleteButton);
-                list.appendChild(item);
-            });
-        }
-
-        // 加载学生状态
-        function loadStudentStatus() {
-            database.ref(`teachers/${currentTeacherId}/studentStatus`).on('value', (snapshot) => {
-                studentStatus = snapshot.val() || {};
-                // 确保所有学生都有状态
-                students.forEach(student => {
-                    if (!studentStatus[student]) {
-                        studentStatus[student] = {
-                            status: 'unsubmitted',
-                            timestamp: null,
-                            feedback: []
-                        };
-                    }
-                });
-                updateLists();
-            });
-        }
-
-        // 保存数据到 Firebase
-        function saveData() {
-            return database.ref(`teachers/${currentTeacherId}/studentStatus`).set(studentStatus)
-                .then(() => {
-                    console.log('数据保存成功');
+                    
+                    // 批量更新数据库
+                    return database.ref(`teachers/${currentTeacherId}`).update(updates);
                 })
-                .catch((error) => {
-                    console.error("Error saving data:", error);
-                    alert("保存数据失败，请检查网络连接");
+                .then(() => {
+                    alert('所有作业状态已重置');
+                    hideResetModal();
+                })
+                .catch(error => {
+                    console.error("Error resetting homework:", error);
+                    alert('重置作业失败，请重试');
                 });
         }
 
-        // 获取状态文本
-        function getStatusText(status) {
-            const statusMap = {
-                'unsubmitted': '未提交',
-                'submitted': '已提交',
-                'needs-revision': '需订正',
-                'completed': '已完成'
-            };
-            return statusMap[status] || status;
-        }
-
-        // 格式化时间
-        function formatTime(timestamp) {
-            if (!timestamp) return '';
-            const date = new Date(timestamp);
-            return `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
-        }
-
-        // 创建学生卡片
-        function createStudentCard(student) {
-            const card = document.createElement('div');
-            const studentData = studentStatus[student] || { status: 'unsubmitted', timestamp: null, feedback: [] };
-            card.className = `student-card ${studentData.status}`;
-            
-            const leftDiv = document.createElement('div');
-            leftDiv.style.display = 'flex';
-            leftDiv.style.alignItems = 'center';
-            leftDiv.style.gap = '10px';
-            
-            // 添加学生姓名
-            const nameSpan = document.createElement('span');
-            nameSpan.textContent = student;
-            nameSpan.style.fontWeight = '500';
-            leftDiv.appendChild(nameSpan);
-            
-            // 添加状态标签
-            const statusBadge = document.createElement('span');
-            statusBadge.className = `status-badge status-${studentData.status}`;
-            statusBadge.textContent = getStatusText(studentData.status);
-            leftDiv.appendChild(statusBadge);
-            
-            card.appendChild(leftDiv);
-
-            // 添加时间显示
-            if (studentData.timestamp) {
-                const timeSpan = document.createElement('span');
-                timeSpan.className = 'time-stamp';
-                timeSpan.textContent = formatTime(studentData.timestamp);
-                card.appendChild(timeSpan);
-            }
-
-            // 添加操作按钮
-            if (studentData.status === 'submitted') {
-                const actionButtons = document.createElement('div');
-                actionButtons.className = 'action-buttons';
-
-                const revisionButton = document.createElement('button');
-                revisionButton.className = 'action-button revision-button';
-                revisionButton.textContent = '需订正';
-                revisionButton.onclick = (e) => {
-                    e.stopPropagation();
-                    studentStatus[student].status = 'needs-revision';
-                    studentStatus[student].timestamp = new Date().toISOString();
-                    addFeedback(student, '作业需要订正');
-                    saveData().then(() => {
-                        updateLists();
-                    });
-                };
-
-                const completeButton = document.createElement('button');
-                completeButton.className = 'action-button complete-button';
-                completeButton.textContent = '已完成';
-                completeButton.onclick = (e) => {
-                    e.stopPropagation();
-                    studentStatus[student].status = 'completed';
-                    studentStatus[student].timestamp = new Date().toISOString();
-                    addFeedback(student, '作业已完成，做得很好！');
-                    saveData().then(() => {
-                        updateLists();
-                    });
-                };
-
-                actionButtons.appendChild(revisionButton);
-                actionButtons.appendChild(completeButton);
-                card.appendChild(actionButtons);
-            } else if (studentData.status === 'needs-revision') {
-                const actionButtons = document.createElement('div');
-                actionButtons.className = 'action-buttons';
-
-                const completeButton = document.createElement('button');
-                completeButton.className = 'action-button complete-button';
-                completeButton.textContent = '已完成';
-                completeButton.onclick = (e) => {
-                    e.stopPropagation();
-                    studentStatus[student].status = 'completed';
-                    studentStatus[student].timestamp = new Date().toISOString();
-                    addFeedback(student, '订正完成，做得很好！');
-                    saveData().then(() => {
-                        updateLists();
-                    });
-                };
-
-                actionButtons.appendChild(completeButton);
-                card.appendChild(actionButtons);
-            }
-            
-            return card;
-        }
-
-        // 更新所有列表
-        function updateLists() {
-            const lists = {
-                'unsubmitted-list': 'unsubmitted',
-                'submitted-list': 'submitted',
-                'revision-list': 'needs-revision',
-                'completed-list': 'completed'
-            };
-
-            for (const [listId, status] of Object.entries(lists)) {
-                const list = document.getElementById(listId);
-                list.innerHTML = '';
-                
-                students.forEach(student => {
-                    const studentData = studentStatus[student] || { status: 'unsubmitted' };
-                    if (studentData.status === status) {
-                        const card = createStudentCard(student);
-                        list.appendChild(card);
-                    }
-                });
+        // 显示评分弹窗
+        function showGradeModal(student, homework) {
+            currentGradingStudent = student;
+            currentGradingHomework = homework;
+            const modal = document.getElementById('grade-modal');
+            const studentInfo = document.getElementById('grade-student-info');
+            if (modal && studentInfo) {
+                studentInfo.textContent = `${student} - 作业${homework}`;
+                modal.style.display = 'flex';
+                console.log('Grade modal displayed for:', student, 'homework:', homework);
+            } else {
+                console.error('Modal elements not found');
             }
         }
 
-        // 添加反馈信息
-        function addFeedback(student, text) {
-            if (!studentStatus[student].feedback) {
-                studentStatus[student].feedback = [];
+        // 隐藏评分弹窗
+        function hideGradeModal() {
+            console.log('Hiding grade modal');
+            const modal = document.getElementById('grade-modal');
+            modal.style.display = 'none';
+            currentGradingStudent = null;
+            currentGradingHomework = null;
+        }
+
+        // 提交评分
+        function submitGrade(grade) {
+            console.log('Submitting grade:', grade, 'for student:', currentGradingStudent, 'homework:', currentGradingHomework);
+            
+            if (!currentGradingStudent || !currentGradingHomework) {
+                console.error('No student or homework selected for grading');
+                return;
             }
-            studentStatus[student].feedback.push({
-                text: text,
+
+            const updates = {};
+            updates[`studentStatus/${currentGradingStudent}/homework${currentGradingHomework}`] = {
+                status: 'completed',
+                grade: grade,
                 timestamp: new Date().toISOString()
-            });
+            };
+
+            console.log('Updating database with path:', `studentStatus/${currentGradingStudent}/homework${currentGradingHomework}`);
+            database.ref(`teachers/${currentTeacherId}`).update(updates)
+                .then(() => {
+                    console.log('Grade submitted successfully');
+                    hideGradeModal();
+                    loadStatusLists();
+                })
+                .catch(error => {
+                    console.error("Error submitting grade:", error);
+                    alert("评分失败，请重试");
+                });
         }
 
-        // 重置所有状态
-        function resetAllStatus() {
-            if (confirm('确定要重置所有学生的作业状态吗？此操作不可撤销。')) {
-                students.forEach(student => {
-                    studentStatus[student] = {
-                        status: 'unsubmitted',
-                        timestamp: null,
-                        feedback: []
+        // 更新评分统计
+        function updateGradeStats() {
+            database.ref(`teachers/${currentTeacherId}/studentStatus`).once('value')
+                .then((snapshot) => {
+                    const statusData = snapshot.val() || {};
+                    const gradeCounts = {
+                        'A+': 0, 'A': 0, 'A-': 0, 'B': 0, 'C': 0
                     };
+                    let totalGrades = 0;
+
+                    // 统计每个评分的数量
+                    Object.values(statusData).forEach(studentStatus => {
+                        for (let i = 1; i <= 4; i++) {
+                            const homework = studentStatus[`homework${i}`];
+                            if (homework && homework.status === 'completed' && homework.grade) {
+                                gradeCounts[homework.grade]++;
+                                totalGrades++;
+                            }
+                        }
+                    });
+
+                    // 更新评分分布显示
+                    const distributionDiv = document.getElementById('grade-distribution');
+                    distributionDiv.innerHTML = '';
+
+                    Object.entries(gradeCounts).forEach(([grade, count]) => {
+                        const percentage = totalGrades > 0 ? (count / totalGrades) * 100 : 0;
+                        const gradeDiv = document.createElement('div');
+                        gradeDiv.innerHTML = `
+                            <div class="grade-label">
+                                <span>${grade}</span>
+                                <span>${count}人 (${percentage.toFixed(1)}%)</span>
+                            </div>
+                            <div class="grade-bar">
+                                <div class="grade-fill" style="width: ${percentage}%"></div>
+                            </div>
+                        `;
+                        distributionDiv.appendChild(gradeDiv);
+                    });
                 });
-                saveData();
-            }
         }
     </script>
 </body>
