@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- 背景圆形 -->
+    <circle cx="60" cy="60" r="55" fill="#2B579A" opacity="0.1"/>
+    
+    <!-- 书本形状 -->
+    <path d="M40 30h40v60H40V30z" fill="#2B579A"/>
+    <path d="M45 40h30v5H45v-5z" fill="white"/>
+    <path d="M45 50h30v5H45v-5z" fill="white"/>
+    <path d="M45 60h20v5H45v-5z" fill="white"/>
+    
+    <!-- 智慧之光 -->
+    <path d="M60 20l10 10-10 10-10-10z" fill="#4A90E2"/>
+    <path d="M60 80l10 10-10 10-10-10z" fill="#4A90E2"/>
+</svg> 

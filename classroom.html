@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智慧课堂 - 学生端</title>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+        }
+
+        :root {
+            --primary-color: #2B579A;
+            --secondary-color: #4A90E2;
+            --success-color: #34A853;
+            --warning-color: #FBBC05;
+            --danger-color: #EA4335;
+            --background-color: #F5F6F8;
+            --card-background: #FFFFFF;
+            --text-primary: #333333;
+            --text-secondary: #666666;
+            --border-radius: 8px;
+            --transition: all 0.3s ease;
+        }
+
+        body {
+            background-color: var(--background-color);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        /* 顶部信息栏 */
+        .header {
+            background: var(--card-background);
+            padding: 16px 24px;
+            border-radius: var(--border-radius);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .class-info {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .class-name {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .class-code {
+            background: #E8F0FE;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            color: var(--primary-color);
+        }
+
+        .time-display {
+            font-size: 18px;
+            color: var(--text-secondary);
+        }
+
+        /* 主要内容区 */
+        .main-content {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+        }
+
+        /* 作业区域 */
+        .homework-section {
+            background: var(--card-background);
+            border-radius: var(--border-radius);
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .group-selector {
+            display: flex;
+            gap: 8px;
+        }
+
+        .group-btn {
+            padding: 6px 12px;
+            border: 1px solid var(--primary-color);
+            border-radius: var(--border-radius);
+            background: white;
+            color: var(--primary-color);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .group-btn.active {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .homework-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 16px;
+        }
+
+        .homework-card {
+            background: #F8F9FA;
+            border-radius: var(--border-radius);
+            padding: 16px;
+            cursor: pointer;
+            transition: var(--transition);
+            border: 2px solid transparent;
+        }
+
+        .homework-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .homework-card.selected {
+            border-color: var(--primary-color);
+            background: #E8F0FE;
+        }
+
+        .homework-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .homework-meta {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+        }
+
+        .homework-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .status-pending {
+            background: var(--warning-color);
+        }
+
+        .status-submitted {
+            background: var(--success-color);
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .quick-actions {
+            background: var(--card-background);
+            border-radius: var(--border-radius);
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .action-btn {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            transition: var(--transition);
+            color: var(--text-primary);
+            text-decoration: none;
+        }
+
+        .action-btn:hover {
+            background: #F0F4F8;
+            color: var(--primary-color);
+        }
+
+        .action-icon {
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #E8F0FE;
+            border-radius: 6px;
+            color: var(--primary-color);
+        }
+
+        .group-info {
+            background: var(--card-background);
+            border-radius: var(--border-radius);
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .group-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+        }
+
+        .group-members {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .member-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #E8F0FE;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            color: var(--primary-color);
+        }
+
+        /* 提交按钮 */
+        .submit-btn {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: var(--primary-color);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 24px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 12px rgba(43, 87, 154, 0.2);
+            transition: var(--transition);
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(43, 87, 154, 0.3);
+        }
+
+        .submit-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+
+            .header {
+                flex-direction: column;
+                gap: 12px;
+                text-align: center;
+            }
+
+            .homework-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* 模态框样式 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: var(--card-background);
+            border-radius: var(--border-radius);
+            padding: 24px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--text-secondary);
+            padding: 4px;
+        }
+
+        .student-list {
+            display: grid;
+            gap: 12px;
+        }
+
+        .student-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px;
+            background: #F8F9FA;
+            border-radius: var(--border-radius);
+            transition: var(--transition);
+        }
+
+        .student-item:hover {
+            background: #F0F4F8;
+        }
+
+        .student-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .student-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #E8F0FE;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            color: var(--primary-color);
+        }
+
+        .student-name {
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .submit-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .submit-btn-small {
+            padding: 6px 12px;
+            border: none;
+            border-radius: var(--border-radius);
+            background: var(--primary-color);
+            color: white;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .submit-btn-small:hover {
+            background: var(--secondary-color);
+        }
+
+        .submit-btn-small:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+        }
+
+        .status-submitted {
+            background: #E6F4EA;
+            color: var(--success-color);
+        }
+
+        .status-pending {
+            background: #FEF7E0;
+            color: var(--warning-color);
+        }
+    </style>
+</head>
+<body>
+    <!-- 顶部信息栏 -->
+    <div class="header">
+        <div class="class-info">
+            <div class="class-name">高一（3）班</div>
+            <div class="class-code">课堂码：ABC123</div>
+        </div>
+        <div class="time-display">2024-03-21 14:30</div>
+    </div>
+
+    <!-- 主要内容区 -->
+    <div class="main-content">
+        <!-- 作业区域 -->
+        <div class="homework-section">
+            <div class="section-header">
+                <div class="section-title">今日作业</div>
+                <div class="group-selector">
+                    <button class="group-btn active">全部</button>
+                    <button class="group-btn">第一组</button>
+                    <button class="group-btn">第二组</button>
+                    <button class="group-btn">第三组</button>
+                </div>
+            </div>
+
+            <div class="homework-grid">
+                <div class="homework-card selected">
+                    <div class="homework-title">数学作业 - 第三章习题</div>
+                    <div class="homework-meta">截止时间：2024-03-22</div>
+                    <div class="homework-status">
+                        <div class="status-dot status-pending"></div>
+                        <span>待提交</span>
+                    </div>
+                </div>
+
+                <div class="homework-card">
+                    <div class="homework-title">语文作业 - 古诗文背诵</div>
+                    <div class="homework-meta">截止时间：2024-03-20</div>
+                    <div class="homework-status">
+                        <div class="status-dot status-submitted"></div>
+                        <span>已提交</span>
+                    </div>
+                </div>
+
+                <div class="homework-card">
+                    <div class="homework-title">英语作业 - Unit 5 练习</div>
+                    <div class="homework-meta">截止时间：2024-03-25</div>
+                    <div class="homework-status">
+                        <div class="status-dot status-pending"></div>
+                        <span>待提交</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 侧边栏 -->
+        <div class="sidebar">
+            <!-- 快捷操作 -->
+            <div class="quick-actions">
+                <a href="#" class="action-btn">
+                    <div class="action-icon">📝</div>
+                    <span>提交作业</span>
+                </a>
+                <a href="#" class="action-btn">
+                    <div class="action-icon">📊</div>
+                    <span>查看成绩</span>
+                </a>
+                <a href="#" class="action-btn">
+                    <div class="action-icon">📚</div>
+                    <span>学习资源</span>
+                </a>
+                <a href="#" class="action-btn">
+                    <div class="action-icon">💬</div>
+                    <span>讨论区</span>
+                </a>
+            </div>
+
+            <!-- 小组信息 -->
+            <div class="group-info">
+                <div class="group-title">第一组</div>
+                <div class="group-members">
+                    <div class="member-avatar">张</div>
+                    <div class="member-avatar">李</div>
+                    <div class="member-avatar">王</div>
+                    <div class="member-avatar">赵</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 提交按钮 -->
+    <button class="submit-btn" disabled>
+        <span>📤</span>
+        <span>提交作业</span>
+    </button>
+
+    <!-- 提交作业模态框 -->
+    <div class="modal" id="submitModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">提交作业</div>
+                <button class="close-btn" onclick="hideSubmitModal()">&times;</button>
+            </div>
+            <div class="student-list">
+                <div class="student-item">
+                    <div class="student-info">
+                        <div class="student-avatar">张</div>
+                        <div class="student-name">张明</div>
+                    </div>
+                    <div class="submit-status">
+                        <span class="status-badge status-pending">待提交</span>
+                        <button class="submit-btn-small">提交</button>
+                    </div>
+                </div>
+                <div class="student-item">
+                    <div class="student-info">
+                        <div class="student-avatar">李</div>
+                        <div class="student-name">李华</div>
+                    </div>
+                    <div class="submit-status">
+                        <span class="status-badge status-submitted">已提交</span>
+                        <button class="submit-btn-small" disabled>已提交</button>
+                    </div>
+                </div>
+                <div class="student-item">
+                    <div class="student-info">
+                        <div class="student-avatar">王</div>
+                        <div class="student-name">王芳</div>
+                    </div>
+                    <div class="submit-status">
+                        <span class="status-badge status-pending">待提交</span>
+                        <button class="submit-btn-small">提交</button>
+                    </div>
+                </div>
+                <div class="student-item">
+                    <div class="student-info">
+                        <div class="student-avatar">赵</div>
+                        <div class="student-name">赵静</div>
+                    </div>
+                    <div class="submit-status">
+                        <span class="status-badge status-pending">待提交</span>
+                        <button class="submit-btn-small">提交</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 作业卡片选择
+        const homeworkCards = document.querySelectorAll('.homework-card');
+        const submitBtn = document.querySelector('.submit-btn');
+
+        homeworkCards.forEach(card => {
+            card.addEventListener('click', () => {
+                // 移除其他卡片的选中状态
+                homeworkCards.forEach(c => c.classList.remove('selected'));
+                // 添加当前卡片的选中状态
+                card.classList.add('selected');
+                // 启用提交按钮
+                submitBtn.disabled = false;
+            });
+        });
+
+        // 小组选择
+        const groupBtns = document.querySelectorAll('.group-btn');
+        groupBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                // 移除其他按钮的选中状态
+                groupBtns.forEach(b => b.classList.remove('active'));
+                // 添加当前按钮的选中状态
+                btn.classList.add('active');
+            });
+        });
+
+        // 更新时间显示
+        function updateTime() {
+            const timeDisplay = document.querySelector('.time-display');
+            const now = new Date();
+            const options = { 
+                year: 'numeric', 
+                month: '2-digit', 
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            };
+            timeDisplay.textContent = now.toLocaleDateString('zh-CN', options);
+        }
+
+        // 每秒更新一次时间
+        updateTime();
+        setInterval(updateTime, 1000);
+
+        // 显示提交模态框
+        function showSubmitModal() {
+            const modal = document.getElementById('submitModal');
+            modal.style.display = 'flex';
+        }
+
+        // 隐藏提交模态框
+        function hideSubmitModal() {
+            const modal = document.getElementById('submitModal');
+            modal.style.display = 'none';
+        }
+
+        // 修改提交按钮点击事件
+        submitBtn.addEventListener('click', showSubmitModal);
+
+        // 为每个学生的提交按钮添加事件
+        document.querySelectorAll('.submit-btn-small').forEach(btn => {
+            btn.addEventListener('click', function() {
+                if (!this.disabled) {
+                    const studentItem = this.closest('.student-item');
+                    const statusBadge = studentItem.querySelector('.status-badge');
+                    const studentName = studentItem.querySelector('.student-name').textContent;
+                    
+                    // 更新状态
+                    statusBadge.textContent = '已提交';
+                    statusBadge.className = 'status-badge status-submitted';
+                    this.disabled = true;
+                    
+                    // 这里可以添加提交到数据库的逻辑
+                    console.log(`${studentName}的作业已提交`);
+                }
+            });
+        });
+
+        // 点击模态框外部关闭
+        window.addEventListener('click', function(event) {
+            const modal = document.getElementById('submitModal');
+            if (event.target === modal) {
+                hideSubmitModal();
+            }
+        });
+
+        // 检查课堂状态
+        async function checkClassroomStatus() {
+            try {
+                const user = firebase.auth().currentUser;
+                if (!user) return;
+
+                // 获取当前课堂信息
+                const classroomRef = firebase.database().ref(`classrooms/${currentClassroomCode}`);
+                const snapshot = await classroomRef.once('value');
+                
+                if (!snapshot.exists()) {
+                    showToast('课堂不存在或已结束', 'error');
+                    setTimeout(() => {
+                        window.location.href = 'index.html';
+                    }, 2000);
+                    return;
+                }
+
+                const classroomData = snapshot.val();
+                
+                // 检查学生是否已加入该课堂
+                if (!classroomData.students || !classroomData.students[user.uid]) {
+                    showToast('您尚未加入该课堂', 'error');
+                    setTimeout(() => {
+                        window.location.href = 'index.html';
+                    }, 2000);
+                    return;
+                }
+
+                // 检查课堂状态
+                if (classroomData.status !== 'active') {
+                    showToast('课堂已结束', 'error');
+                    setTimeout(() => {
+                        window.location.href = 'index.html';
+                    }, 2000);
+                    return;
+                }
+
+                // 更新界面显示
+                document.getElementById('classroom-code').textContent = currentClassroomCode;
+                loadHomeworkList();
+                loadStudentList();
+            } catch (error) {
+                console.error('检查课堂状态失败:', error);
+                showToast('检查课堂状态失败', 'error');
+            }
+        }
+
+        // 页面加载时检查课堂状态
+        document.addEventListener('DOMContentLoaded', () => {
+            // 从 URL 参数获取课堂码
+            const urlParams = new URLSearchParams(window.location.search);
+            currentClassroomCode = urlParams.get('code');
+            
+            if (!currentClassroomCode) {
+                showToast('未找到课堂码', 'error');
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 2000);
+                return;
+            }
+
+            checkClassroomStatus();
+        });
+    </script>
+</body>
+</html> 
